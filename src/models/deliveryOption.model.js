@@ -1,9 +1,10 @@
-import mongoose from mongoose;
+import mongoose from "mongoose";
 
 const deliveryOptionsSchema = new mongoose.Schema({
     optionName: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     }, 
     description: {
         type: String,

@@ -32,6 +32,12 @@ const transactionSchema = new mongoose.Schema(
             type: String,
             default: null,
         },
+        paymentMethod:{
+            type: String,
+            required: true,
+            uppercase: true,
+            trim: true,
+        },
         refundId: {                 //IF ORDER IS REFUNDED
             type: String,
             default: null
@@ -45,6 +51,7 @@ const transactionSchema = new mongoose.Schema(
         amount: {
             type: Number,
             required: true,
+            min: 0,
         },
         status: {
             type: String,
@@ -60,6 +67,8 @@ const transactionSchema = new mongoose.Schema(
 
         refundedAmount: {
             type: Number,
+            min: 0,
+            default: 0,
         },
     },
     {

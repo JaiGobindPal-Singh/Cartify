@@ -39,6 +39,7 @@ const chargeSchema = new mongoose.Schema({
     chargeAmount: {
         type: Number,
         required: true,
+        min: 0,
         validate: {
             validator: function (value) {
                 if (this.chargeType === "PERCENT") {

@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import PERMISSIONS from '../constants/permissions';
+import PERMISSIONS from '../constants/permissions.js';
 
 const userSchema = new mongoose.Schema(
     {
@@ -55,6 +55,7 @@ const userSchema = new mongoose.Schema(
         password: {                                //user password
             type: String,
             required: true,
+            select: false,                          //do not return password in any query
         },
         role: {
             type: String,
@@ -64,7 +65,7 @@ const userSchema = new mongoose.Schema(
             uppercase: true,
         },
         permissions: {
-            type: [string],
+            type: [String],
             enum: PERMISSIONS,
         }
     },

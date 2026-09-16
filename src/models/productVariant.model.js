@@ -21,12 +21,22 @@ const pricingTiersSchema = new mongoose.Schema({
                 min: 0
             }
         }],
-        validate: {
-            validator: function (v) {
-                return Array.isArray(v) && v.length >= 1;
+        validate: [
+            {
+                validator: function (v) {
+                    return Array.isArray(v) && v.length >= 1;
+                },
+                message: props => `${props.path} must have at least 1 item!`
             },
-            message: props => `${props.path} must have at least 1 item!`
-        }
+            {
+                // 🌟 Custom validator to prevent duplicate currencies in the same array
+                validator: function (v) {
+                    const currencies = v.map(item => item.currency);
+                    return currencies.length === new Set(currencies).size;
+                },
+                message: 'Duplicate currencies are not allowed in the pricing array!'
+            }
+        ]
     }
 }, { _id: false });
 
@@ -86,6 +96,30 @@ const purchaseOptionsSchema = new mongoose.Schema({
     }
 }, { _id: false });
 
+const defaultPricingSchema = new mongoose.Schema({
+    currency: {
+        type: String,
+        required: true,
+        trim: true,
+        uppercase: true
+    },
+    price: {
+        type: Number,
+        required: true,
+        min: 0
+    },
+    comparePrice: {
+        type: Number,
+        min: 0,
+        validate: {
+            validator: function (value) {
+                return value >= 0 && value > this.price;
+            },
+            message: 'comparePrice must be greater than price and cannot be negative'
+        }
+    }
+});
+
 const variantSchema = new mongoose.Schema(
     {
         name: {
@@ -126,30 +160,23 @@ const variantSchema = new mongoose.Schema(
             default: 0,
         },
         pricing: {                  //product pricing in different currencies, with compare price for discounts
-            type: [{
-                currency: {
-                    type: String,
-                    required: true,
-                    trim: true,
-                    uppercase: true
-                },
-                price: {
-                    type: Number,
-                    required: true,
-                    min: 0
-                },
-                comparePrice: {
-                    type: Number,
-                    required: true,
-                    min: 0
-                }
-            }],
-            validate: {
+            type: [defaultPricingSchema],
+            validate: [{
+                // Custom validator to ensure at least one currency pricing is provided
                 validator: function (v) {
                     return Array.isArray(v) && v.length >= 1;
                 },
                 message: props => `${props.path} must have at least 1 currency pricing!`
+            },
+            {
+                // Custom validator to prevent duplicate currencies in the same array
+                validator: function (v) {
+                    const currencies = v.map(item => item.currency);
+                    return currencies.length === new Set(currencies).size;
+                },
+                message: 'Duplicate currencies are not allowed in the pricing array!'
             }
+            ]
         },
 
         pricingTiers: {         //different tiers of pricing based on quantity, for bulk discounts

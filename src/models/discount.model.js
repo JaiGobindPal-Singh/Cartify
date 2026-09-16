@@ -59,7 +59,8 @@ const discountSchema = new mongoose.Schema({
         },
         usageLimitTotal: {
             type: Number, // Total times this coupon can ever be used across the store
-            default: null
+            default: null,
+            min: 0
         },
     },
 
@@ -71,7 +72,13 @@ const discountSchema = new mongoose.Schema({
     },
     endDate: {
         type: Date,
-        required: true
+        required: true,
+        validate: {
+            validator: function (value) {
+                return value > this.startDate;
+            },
+            message: 'End date must be after start date'
+        }
     },
     isActive: {
         type: Boolean,
@@ -79,7 +86,7 @@ const discountSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-// Pre-save hook to automatically deactivate expired coupons on save
+// Pre-save hook to automatically deactivate expired coupons on save but require cron job to check for expired coupons and deactivate them
 discountSchema.pre('save', function () {
     if (this.endDate && this.endDate < new Date()) {
         this.isActive = false;

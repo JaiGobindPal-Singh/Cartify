@@ -72,11 +72,13 @@ const billingSchema = new mongoose.Schema({
     },
     subtotal: {
         type: Number,
-        required: true
+        required: true,
+        min: 0
     },
     discount: {
         type: Number,
-        default: 0
+        default: 0,
+        min: 0
     },
     charges: {
         type: [chargeSchema],
@@ -84,7 +86,8 @@ const billingSchema = new mongoose.Schema({
     },
     totalBill: {
         type: Number,
-        required: true
+        required: true,
+        min: 0
     },
     billingAddress: {
         type: addressSchema,
@@ -108,10 +111,11 @@ export const cartItemSchema = new mongoose.Schema({
         },
         amount: {
             type: Number,
-            required: true
+            required: true,
+            min: 0
         }
     },
-    productOptions: {
+    purchaseOptions: {
         type: [{
             optionName: String,
             optionValue: String
@@ -120,6 +124,11 @@ export const cartItemSchema = new mongoose.Schema({
     quantity: {
         type: Number,
         required: true,
+        validate: {
+            //integer validation for quantity
+            validator: Number.isInteger,
+            message: '{VALUE} is not an integer value for quantity'
+        },
         min: [1, 'Quantity cannot be less than 1.'],
         default: 1
     }
@@ -156,11 +165,43 @@ const orderSchema = new mongoose.Schema({
     items: {
         type: [cartItemSchema],
         required: true,
+        validate: {
+            //validator to ensure unique product variants in the cart
+            validator: async function (items) {
+                // check if items is an array and has at least one item
+                if (!Array.isArray(items) || items.length === 0) {
+                    return false;
+                }
+
+                //extract products from array and create unique identifier for uniqueness
+                const productIds = items.map(item => {
+                    const pid = item.product ? item.product.toString() : '' //extract product id as string
+
+                    //extract product options as string
+                    const optionArr = item.purchaseOptions || []; //default to empty array if productOptions is undefined
+
+                    const poption = optionArr.map(opt => `${opt.optionName}:${opt.optionValue}`).sort().join('|');
+
+                    return `${pid}-${poption}`; //combine product id and options to create a unique identifier
+
+                });
+
+                //check if there are any duplicates in the productIds array
+                const uniqueProductIds = new Set(productIds);
+                return uniqueProductIds.size === productIds.length;
+            },
+            message: 'Duplicate product variants are not allowed in the cart!'
+        }
     },
 
-    billing: billingSchema,
+    billing: {
+        type: billingSchema,
+        required: true
+    },
 
     deliveryDetails: {
+        required: true,
+
         deliveryAddress: {
             type: addressSchema,
             required: true,
