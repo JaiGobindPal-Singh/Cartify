@@ -1,25 +1,34 @@
-import multer from 'multer';
+import multer from "multer";
 
 const storage = multer.memoryStorage();
+
+//filetype filter and limit middleware
+const fileFilter = (req, file, cb) => {
+    const allowedMimeTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/webp",
+    ];
+
+    if (allowedMimeTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(
+            new Error(
+                "Invalid file type. Only JPEG, JPG, PNG and WEBP images are allowed."
+            ),
+            false
+        );
+    }
+};
+
 const upload = multer({
     storage,
+    fileFilter,
     limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB
-    },
-    
-    fileFilter: (req, file, cb) => {        //cb represents callback function
-        const allowedTypes = [
-            "image/jpeg",
-            "image/png",
-            "image/jpg",
-            "image/webp",
-        ];
-
-        if (allowedTypes.includes(file.mimetype)) {
-            cb(null, true);
-        } else {
-            cb(new Error("Only image files are allowed"));
-        }
+        fileSize: 5 * 1024 * 1024, // 5MB per image
+        files: 5,   //max 5 files
     },
 });
 

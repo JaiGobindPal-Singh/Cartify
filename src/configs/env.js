@@ -5,6 +5,7 @@ dotenv.config();
 const requiredEnv = [
     'MONGO_URI',
     'JWT_SECRET',
+    'ENCRYPTION_KEY',
     'ADMIN_PHONE',
     'ADMIN_PASSWORD',
     // 'CLOUDINARY_API',
@@ -27,8 +28,10 @@ export const env = {
     jwtSecret: process.env.JWT_SECRET,
     jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
     adminPhone: process.env.ADMIN_PHONE,
+    adminEmail: process.env.ADMIN_EMAIL || 'admin@example.com',
     adminPassword: process.env.ADMIN_PASSWORD,
     adminName: process.env.ADMIN_NAME || 'Administrator',
+    encryptionKey: process.env.ENCRYPTION_KEY,
     // cloudinaryApi: process.env.CLOUDINARY_API,
     // cloudinarySecret: process.env.CLOUDINARY_SECRET,
     // cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME,
@@ -36,3 +39,4 @@ export const env = {
     // razorpaySecret: process.env.RAZORPAY_KEY_SECRET,
     // razorpayWebhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET
 };
+export default env;
