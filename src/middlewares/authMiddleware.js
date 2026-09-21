@@ -1,16 +1,15 @@
-import User from '../models/user.model.js';
 import { decryptToken, generateToken } from '../utils/jwt.utils.js'
 
 const refreshTokenAndSetCookie = (decodedPrevToken, res, timeout) => {
     try {
-        
         //skip refreshing token if the previous token is still valid for more than 1 day
         if (decodedPrevToken && decodedPrevToken.exp) {
             const currentTimeInSeconds = Math.floor(Date.now() / 1000);
             const timeRemaining = decodedPrevToken.exp - currentTimeInSeconds;
-            const oneDayInSeconds = 24 * 60 * 60; // 86,400 seconds
+            const halfHourInSeconds = 15 * 60; 
+            console.log("hell")
 
-            if (timeRemaining > oneDayInSeconds) {
+            if (timeRemaining > halfHourInSeconds) {
                 return;
             }
         }

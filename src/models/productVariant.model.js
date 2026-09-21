@@ -118,7 +118,7 @@ const defaultPricingSchema = new mongoose.Schema({
             message: 'comparePrice must be greater than price and cannot be negative'
         }
     }
-});
+}, { _id: false });
 
 const variantSchema = new mongoose.Schema(
     {
@@ -130,8 +130,18 @@ const variantSchema = new mongoose.Schema(
         product: {              //parent product id
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Product',
-            required: true,
             index: true
+        },
+        category: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Category",
+            trim: true,
+            default: [],
+        },
+        keywords: {
+            type: [String],
+            trim: true,
+            default: [],
         },
         description: {       //short product description
             type: String,
@@ -201,10 +211,10 @@ const variantSchema = new mongoose.Schema(
         isDeleted: {                                  //if isDeleted is true product will not be visible
             type: Boolean,
             default: false
-        }
-
-    }
-);
+        },
+        availableStock: { type: Number, required: true, min: 0, default: 0, validate: {validator: Number.isInteger, message: '{VALUE} is not an integer value'}}, // Items available for sale
+            reservedStock: { type: Number, required: true, min: 0, default: 0, validate: {validator: Number.isInteger, message: '{VALUE} is not an integer value'}}, // Items in pending carts/orders
+    });
 
 const ProductVariant = mongoose.model('ProductVariant', variantSchema);
 

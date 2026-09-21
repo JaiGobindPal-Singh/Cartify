@@ -57,26 +57,62 @@ export const processImages = async (req) => {
 };
 
 /**
+ *  process and store single image
+ * @param {*} req 
+ * @returns 
+ */
+export const processSingleImage = async (req) => {
+    if (!req.file) {
+        return '';
+    }
+
+    await fs.mkdir(imageDirectory, {
+        recursive: true,
+    });
+
+    const filename = `${crypto.randomUUID()}.webp`;
+
+    const outputPath = path.join(
+        imageDirectory,
+        filename
+    );
+
+    await sharp(req.file.buffer)
+        .rotate()
+        .resize({
+            width: 1600,
+            height: 1600,
+            fit: "inside",
+            withoutEnlargement: true,
+        })
+        .webp({
+            quality: 80,
+        })
+        .toFile(outputPath);
+
+    const imageUrl = `/uploads/images/${filename}`;
+
+    return imageUrl;
+};
+/**
  * 
  * @param {String} fileName name of image file to delete
  * @returns {Boolean} true if success
  */
 export const deleteImage = async (fileName) => {
-    
+
     //extract original filename even if path is passed
     const safeFileName = path.basename(fileName);
 
     // creating file path
-    const filePath = path.join(process.cwd(), 'public', 'uploads', 'images', safeFileName);
+    const filePath = path.join(imageDirectory, safeFileName);
 
     try {
         //deleting the file
         await unlink(filePath);
-        console.log(`Successfully deleted: ${safeFileName}`);
         return true;
     } catch (error) {
         if (error.code === 'ENOENT') {
-            console.warn(`File not found: ${safeFileName}`);
             return false;
         }
         console.error(`Error deleting file: ${error.message}`);

@@ -6,7 +6,7 @@ const categorySchema = new mongoose.Schema(
         type: String,
         required: true,
         trim: true,
-        unique: true
+        lowercase: true,
     },
     parent: {
         type: mongoose.Schema.Types.ObjectId,
@@ -15,7 +15,6 @@ const categorySchema = new mongoose.Schema(
     },
     iconUrl:{
         type: String,
-        required: true,
     },
     isDeleted:{
         type: Boolean,
