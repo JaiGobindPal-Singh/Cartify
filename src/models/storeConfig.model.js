@@ -10,7 +10,6 @@ const storeConfigSchema = new mongoose.Schema({
         type: String,
         default: "store-config",
         required: true,
-        unique: true
     },
     //supported currencies for the store
     supportedCurrencies: {
@@ -23,18 +22,29 @@ const storeConfigSchema = new mongoose.Schema({
 
     //conditions for order placement
     orderConditions: {
-        minAmount: {
-            type: Number,
-            default: 0,
-        },
-        availableCountries: {
-            type: [String],
-            default: [],            // [] means delivery available at all countries
-        },
-        availablePostalCodes: {
-            type: [String],
-            default: [],            // [] means delivery available at all locations
-        }
+        minAmount: [{
+            currency: {type:String, uppercase: true},
+            amount: {type: Number, min: 0},
+        }],
+        // Allows you to define global rules or highly targeted country-specific rules
+        deliveryZones: [{
+            country: {
+                type: String,
+                required: true // e.g., "US", "IN", or "GLOBAL"
+            },
+            isExempted: {
+                type: Boolean,
+                default: false // If true, this entire country is blocked
+            },
+            availablePostalCodes: {
+                type: [String],
+                default: [], // [] means the whole country is allowed
+            },
+            exemptedPostalCodes: {
+                type: [String],
+                default: [], // Specific zip codes in THIS country to block
+            }
+        }]
     },
 
     //payment options for the store
@@ -58,14 +68,7 @@ const storeConfigSchema = new mongoose.Schema({
                     trim: true,
                 }],
                 default: [] // if empty, COD is allowed for all countries  
-            },
-            allowedPostalCodes: {
-                type: [{
-                    type: String,
-                    trim: true,
-                }],
-                default: [] // if empty, COD is allowed for all postal codes  //for optional cod at certain locations, we can add postal codes here
-            },
+            }
         }
     }
 });

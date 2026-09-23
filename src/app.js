@@ -4,12 +4,14 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import { env } from "./configs/env.js"
 import connectDb from './configs/db.js';
+import { initializeStoreConfig } from './operations/storeConfig/storeConfig.operation.js';
 import { seedAdminUser } from './utils/seedAdmin.js';
 import multer from "multer";
 import authRoutes from "./routes/auth.routes.js"
 import productRoutes from "./routes/product.routes.js"
 import categoryRoutes from "./routes/category.routes.js"
 import cartRoutes from "./routes/cart.routes.js"
+import storeConfigRoutes from "./routes/storeConfig.routes.js"
 
 const app = express();
 const __dirname = import.meta.dirname;
@@ -32,11 +34,13 @@ app.use("/api/v0/auth", authRoutes);
 app.use("/api/v0/products", productRoutes);
 app.use("/api/v0/categories", categoryRoutes);
 app.use("/api/v0/cart", cartRoutes);
+app.use("/api/v0/config", storeConfigRoutes);
 
 
 export const startServer = async () => {
   await connectDb();
   await seedAdminUser();
+  initializeStoreConfig();
 
   //global error handler
   app.use((err, req, res, next) => {

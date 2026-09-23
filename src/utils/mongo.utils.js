@@ -13,9 +13,9 @@ export const validateMongoId = (id) => {
 export const cleanMongoObject = (raw) => {
     const semi = raw.toObject();
     semi.id = raw._id;
-    delete raw._id;
-    delete raw.__v;
-    delete raw.createdAt;
-    delete raw.updatedAt;
+    delete semi._id;
+    delete semi.__v;
+    delete semi.createdAt;
+    delete semi.updatedAt;
     return semi;
 }
