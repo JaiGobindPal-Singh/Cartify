@@ -24,7 +24,7 @@ export const cartItemSchema = new mongoose.Schema({
         min: [1, 'Quantity cannot be less than 1.'],
         default: 1
     }
-}, { _id: false });
+});
 
 
 const cartSchema = new mongoose.Schema({

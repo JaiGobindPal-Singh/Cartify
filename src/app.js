@@ -9,6 +9,7 @@ import multer from "multer";
 import authRoutes from "./routes/auth.routes.js"
 import productRoutes from "./routes/product.routes.js"
 import categoryRoutes from "./routes/category.routes.js"
+import cartRoutes from "./routes/cart.routes.js"
 
 const app = express();
 const __dirname = import.meta.dirname;
@@ -30,6 +31,7 @@ app.use(
 app.use("/api/v0/auth", authRoutes);
 app.use("/api/v0/products", productRoutes);
 app.use("/api/v0/categories", categoryRoutes);
+app.use("/api/v0/cart", cartRoutes);
 
 
 export const startServer = async () => {

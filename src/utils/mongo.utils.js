@@ -9,3 +9,13 @@ export const validateMongoId = (id) => {
     }
     return false; // Invalid
 };
+
+export const cleanMongoObject = (raw) => {
+    const semi = raw.toObject();
+    semi.id = raw._id;
+    delete raw._id;
+    delete raw.__v;
+    delete raw.createdAt;
+    delete raw.updatedAt;
+    return semi;
+}
