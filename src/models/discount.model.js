@@ -20,21 +20,24 @@ const discountSchema = new mongoose.Schema({
         uppercase: true,
         enum: ['FIXED', 'PERCENT']
     },
-    discountValue: {
-        type: Number,
-        required: true,
-        min: [0, 'Discount value cannot be negative'],
-        validate: {
-            validator: function (value) {
-                // Enforces that percentage discounts cannot exceed 100%
-                if (this.discountType === 'PERCENT' && (value > 100 || value < 0)) {
-                    return false;
-                }
-                return true;
-            },
-            message: 'Percentage discount cannot be greater than 100% or less than 0%'
+    discountValue: [{
+        currency: String,
+        amount: {
+            type: Number,
+            required: true,
+            min: [0, 'Discount value cannot be negative'],
+            validate: {
+                validator: function (value) {
+                    // Enforces that percentage discounts cannot exceed 100%
+                    if (this.discountType === 'PERCENT' && (value > 100 || value < 0)) {
+                        return false;
+                    }
+                    return true;
+                },
+                message: 'Percentage discount cannot be greater than 100% or less than 0%'
+            }
         }
-    },
+    }],
 
     // 2. Discount Conditions
     conditions: {
@@ -43,14 +46,9 @@ const discountSchema = new mongoose.Schema({
             default: 0,
             min: 0
         },
-        newUserOnly: {
+        newUserOnly: {    //todo will be implemented later after orders
             type: Boolean,
             default: false
-        },
-        currency: {
-            type: String,
-            trim: true,
-            uppercase: true
         },
         maxDiscountAmount: {
             type: Number, // Useful cap for PERCENT discounts (e.g., 50% off up to ₹500)
@@ -75,7 +73,19 @@ const discountSchema = new mongoose.Schema({
         required: true,
         validate: {
             validator: function (value) {
-                return value > this.startDate;
+                // On document saves, `this` is the document. On updates with
+                // runValidators enabled, `this` is the query.
+                if (this instanceof mongoose.Query) {
+                    const update = this.getUpdate() || {};
+                    const startDate = update.$set?.startDate ?? update.startDate;
+
+                    // For a partial update, startDate is not available here;
+                    // MongoDB keeps the existing value, so validate endDate
+                    // only when both dates are supplied in the update.
+                    return !startDate || new Date(value) > new Date(startDate);
+                }
+
+                return !this.startDate || value > this.startDate;
             },
             message: 'End date must be after start date'
         }

@@ -95,6 +95,30 @@ const billingSchema = new mongoose.Schema({
     }
 }, { _id: false });
 
+const deliveryDetailsSchema = new mongoose.Schema({
+    deliveryAddress: {
+        type: addressSchema,
+        required: true,
+    },
+    //type of delivery standard, express, same-day, etc. based on delivery options available
+    deliveryType: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'DeliveryOption',
+        required: true
+    },
+    //below if using external delivery partners
+    deliveryPartner: {
+        type: String,
+        trim: true,
+        default: ""
+    },
+    trackingId: {
+        type: String,
+        trim: true,
+        default: ""
+    }
+}, { _id: false });
+
 
 // Schema for individual items records within the order 
 export const cartItemSchema = new mongoose.Schema({
@@ -200,29 +224,8 @@ const orderSchema = new mongoose.Schema({
     },
 
     deliveryDetails: {
-        required: true,
-
-        deliveryAddress: {
-            type: addressSchema,
-            required: true,
-        },
-        //type of delivery standard, express, same-day, etc. based on delivery options available
-        deliveryType: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'DeliveryOption',
-            required: true
-        },
-        //below if using external delivery partners 
-        deliveryPartner: {
-            type: String,
-            trim: true,
-            default: ""
-        },
-        trackingId: {
-            type: String,
-            trim: true,
-            default: ""
-        }
+        type: deliveryDetailsSchema,
+        required: true
     },
 
     cancellationReason: {
