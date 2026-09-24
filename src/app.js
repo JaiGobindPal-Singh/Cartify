@@ -14,6 +14,7 @@ import cartRoutes from "./routes/cart.routes.js"
 import storeConfigRoutes from "./routes/storeConfig.routes.js"
 import deliveryOptionRoutes from "./routes/deliveryOption.routes.js"
 import discountRoutes from "./routes/discount.routes.js"
+import chargeRoutes from "./routes/charge.routes.js"
 
 const app = express();
 const __dirname = import.meta.dirname;
@@ -39,6 +40,7 @@ app.use("/api/v0/cart", cartRoutes);
 app.use("/api/v0/config", storeConfigRoutes);
 app.use("/api/v0/delivery-options", deliveryOptionRoutes);
 app.use("/api/v0/discounts", discountRoutes);
+app.use("/api/v0/charges", chargeRoutes);
 
 
 export const startServer = async () => {

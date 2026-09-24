@@ -10,9 +10,10 @@ const chargeExemptionSchema = new mongoose.Schema({
     },
 
     conditions: {
-        postalCodes: [{ type: String, trim: true }],
+        postalCodes: [{ type: String, trim: true , uppercase: true}],
+        countries: [{ type: String, trim: true, uppercase: true }],
         minOrderAmount: { type: Number, min: 0 },
-        paymentOption: { type: String, enum: ['COD', 'ONLINE'], uppercase: true },
+        paymentOption: { type: String, enum: ['COD', 'ONLINE', ""], uppercase: true },
         deliveryType: { type: String, uppercase: true },
         currency: { type: String, uppercase: true }
     }
