@@ -15,6 +15,9 @@ import storeConfigRoutes from "./routes/storeConfig.routes.js"
 import deliveryOptionRoutes from "./routes/deliveryOption.routes.js"
 import discountRoutes from "./routes/discount.routes.js"
 import chargeRoutes from "./routes/charge.routes.js"
+import orderRoutes from "./routes/order.routes.js"
+import razorpayRoutes from "./modules/payments/razorpay/razorpay.routes.js"
+import paypalRoutes from "./modules/payments/paypal/paypal.routes.js"
 
 const app = express();
 const __dirname = import.meta.dirname;
@@ -22,8 +25,6 @@ const publicPath = path.join(__dirname, '..', 'public');
 const PORT = env.port;
 
 app.use(express.static(publicPath));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(
   cors({
@@ -33,6 +34,12 @@ app.use(
   }),
 );
 
+// Webhooks must receive the raw request body before JSON parsing.
+app.use("/api/v0/payments/razorpay", razorpayRoutes);
+app.use("/api/v0/payments/paypal", paypalRoutes);
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 app.use("/api/v0/auth", authRoutes);
 app.use("/api/v0/products", productRoutes);
 app.use("/api/v0/categories", categoryRoutes);
@@ -41,6 +48,7 @@ app.use("/api/v0/config", storeConfigRoutes);
 app.use("/api/v0/delivery-options", deliveryOptionRoutes);
 app.use("/api/v0/discounts", discountRoutes);
 app.use("/api/v0/charges", chargeRoutes);
+app.use("/api/v0/orders", orderRoutes);
 
 
 export const startServer = async () => {
