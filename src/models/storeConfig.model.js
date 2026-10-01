@@ -13,10 +13,12 @@ const storeConfigSchema = new mongoose.Schema({
     },
     //supported currencies for the store
     supportedCurrencies: {
-        type: [String],
+        type: [{
+            type: String,
+            uppercase: true
+        }],
         default: ["USD"],
         required: true,
-        uppercase: true,
         trim: true,
     },
 

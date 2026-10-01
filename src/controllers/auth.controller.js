@@ -24,17 +24,19 @@ export const registerUser = async (req, res) => {
     const password = String(req.body.password);
 
     //input validation
-    if (!name || !uid || !email || !password) {
-        return res.status(400).json({ error: 'Name, UID, email and password are required' });
+    if (!name || !email || !password) {
+        return res.status(400).json({ error: 'Name, email and password are required' });
     }
     if (password.length < 8 || !validatePassword(password)) {
         return res.status(400).json({ error: "Invalid password" })
     }
 
     //fetching user from db to check if user exist
-    const user = await User.findOne({ uid }).lean();
-    if (user) {
-        return res.status(400).json({ error: 'User already exists with same uid' });
+    if(uid){
+        const user = await User.findOne({ uid }).lean();
+        if (user) {
+            return res.status(400).json({ error: 'User already exists with same uid' });
+        }
     }
     const emailUser = await User.findOne({ email }).lean();
     if (emailUser) {
@@ -112,6 +114,7 @@ export const loginUser = async (req, res) => {
             name: user.name,
             uid: user.uid,
             role: user.role,
+            email:user.email,
             streetAddress: user.address?.streetAddress,
             city: user.address?.city,
             state: user.address?.state,
@@ -140,11 +143,14 @@ export const logoutUser = async (req, res) => {
 export const autoLoginUser = async (req, res) => {
 
     const decoded = req.user;
+    if(!decoded){
+        return res.status(401).json({ error:"unauthorized"});
+    }
 
     //fetch user from database using decoded token
     const user = await User.findById(decoded.id).lean();
     if (!user) {
-        return res.status(200).json({ user: {} });
+        return res.status(401).json({ error: "unauthorized" });
     }
 
     //attach user to request object
@@ -154,6 +160,7 @@ export const autoLoginUser = async (req, res) => {
             name: user.name,
             role: user.role,
             uid: user.uid,
+            email:user.email,
             streetAddress: user.address?.streetAddress,
             city: user.address?.city,
             state: user.address?.state,
@@ -203,28 +210,3 @@ export const forgotUser = async (req, res) => {
     }
 }
 
-export const setUserAddress = async (req, res) => {
-    try {
-
-        const { streetAddress, city, state, postalCode } = req.body;
-        if (!streetAddress || !city || !state || !postalCode) {
-            return res.status(400).json({ error: "address details are required" });
-        }
-        if (!req.user?.id) {
-            return res.status(400).json({
-                error: "Login required"
-            })
-        }
-        const addressObj = { streetAddress, city, state, postalCode }
-        const user = await User.findByIdAndUpdate(req.user?.id, {
-            $set: { address: addressObj }
-        });
-        return res.status(200).json({
-            success: true,
-            user
-        })
-    } catch (e) {
-        console.log(e);
-        return res.status(500).json({ error: "internal server error" })
-    }
-}

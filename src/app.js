@@ -18,6 +18,7 @@ import chargeRoutes from "./routes/charge.routes.js"
 import orderRoutes from "./routes/order.routes.js"
 import razorpayRoutes from "./modules/payments/razorpay/razorpay.routes.js"
 import paypalRoutes from "./modules/payments/paypal/paypal.routes.js"
+import userRoutes from "./routes/user.routes.js";
 
 const app = express();
 const __dirname = import.meta.dirname;
@@ -28,8 +29,8 @@ app.use(express.static(publicPath));
 app.use(cookieParser());
 app.use(
   cors({
-    // frontend URL (DO NOT use a trailing slash '/')
-    origin: "http://localhost:5173",
+    // Allow requests from any origin during development.
+    origin: true,
     credentials: true,
   }),
 );
@@ -49,6 +50,7 @@ app.use("/api/v0/delivery-options", deliveryOptionRoutes);
 app.use("/api/v0/discounts", discountRoutes);
 app.use("/api/v0/charges", chargeRoutes);
 app.use("/api/v0/orders", orderRoutes);
+app.use("/api/v0/user", userRoutes);
 
 
 export const startServer = async () => {

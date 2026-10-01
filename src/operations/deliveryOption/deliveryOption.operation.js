@@ -8,7 +8,7 @@ export const updateDeliveryOption = async (deliveryOptionId, updates) => {
     return DeliveryOption.findByIdAndUpdate(
         deliveryOptionId,
         { $set: updates },
-        { new: true, runValidators: true }
+        { returnDocument: "after", runValidators: true }
     );
 };
 

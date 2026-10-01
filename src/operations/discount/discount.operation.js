@@ -26,7 +26,7 @@ export const updateDiscount = async (discountId, updates) => {
     return Discount.findByIdAndUpdate(
         discountId,
         { $set: updates },
-        { new: true, runValidators: true }
+        { returnDocument: "after", runValidators: true }
     );
 };
 

@@ -44,7 +44,7 @@ const buildCartSnapshot = (cart, currency) => {
 
         return {
             product: product._id,
-            purchasePrice: { currency, amount: roundMoney(unitPrice) },
+            purchasePrice: { amount: roundMoney(unitPrice) },
             purchaseOptions: item.purchaseOptions || [],
             quantity: item.quantity,
             lineTotal: roundMoney(lineTotal),
@@ -63,7 +63,7 @@ const reserveInventory = async (items) => {
             const product = await ProductVariant.findOneAndUpdate(
                 { _id: item.product, availableStock: { $gte: item.quantity }, isDeleted: false },
                 { $inc: { availableStock: -item.quantity, reservedStock: item.quantity } },
-                { new: true }
+                { returnDocument: "after" }
             );
             if (!product) throw new Error("One or more products are out of stock");
             reserved.push({ product: item.product, quantity: item.quantity });
@@ -74,7 +74,7 @@ const reserveInventory = async (items) => {
         throw error;
     }
 };
-
+//release inventory in case order failed
 export const releaseInventory = async (items) => {
     await Promise.all(items.map((item) => ProductVariant.updateOne(
         { _id: item.product, reservedStock: { $gte: item.quantity } },
@@ -82,6 +82,7 @@ export const releaseInventory = async (items) => {
     )));
 };
 
+//update reserved inventory after order is processed
 export const commitInventory = async (items) => {
     await Promise.all(items.map((item) => ProductVariant.updateOne(
         { _id: item.product, reservedStock: { $gte: item.quantity } },
@@ -122,7 +123,7 @@ export const createOrder = async ({ userId, orderData }) => {
 
     // Convert cart items into a clean snapshot for payment calculation.
     const snapshot = buildCartSnapshot(cart, normalizedCurrency);
-
+    
     // Add delivery and payment charges based on customer location and payment method.
     const charges = await getApplicableCharges({
         country: deliveryAddress.country,
@@ -133,6 +134,7 @@ export const createOrder = async ({ userId, orderData }) => {
         cartValue: snapshot.subtotal,
     });
 
+    //validating discount code
     let discount = 0;
     let discountResult = null;
     if (discountCode) {
@@ -208,6 +210,7 @@ export const createOrder = async ({ userId, orderData }) => {
         await order.save();
         return { order, payment, discount: discountResult };
     } catch (error) {
+        //error occurred revert changes
         if (transaction?._id) await Transaction.deleteOne({ _id: transaction._id });
         if (order?._id) await Order.deleteOne({ _id: order._id });
         await releaseInventory(reserved);
@@ -261,7 +264,7 @@ export const getUserOrders = async (userId, { pageNumber = 1, pageSize = 10 } = 
 
     const [orders, totalOrders] = await Promise.all([
         Order.find(filter)
-            .select("status billing deliveryDetails.deliveryType billing.totalBill billing.currency createdAt")
+            .select("status deliveryDetails.deliveryType billing.totalBill billing.currency createdAt")
             .populate("deliveryDetails.deliveryType", "optionName")
             .sort({ createdAt: -1 })
             .skip((normalizedPageNumber - 1) * normalizedPageSize)

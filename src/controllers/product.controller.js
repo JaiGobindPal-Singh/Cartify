@@ -178,18 +178,18 @@ export const getAllProducts = async (req, res) => {
 
     const {
         sortBy = null,
-        isFeatured = false,
-        isUpcoming = false
+        isFeatured,
+        isUpcoming
     } = req.query;
 
     //getting filters from query
     const filter = {}
     filter.isDeleted = false;
-    filter.isFeatured = isFeatured;
-    filter.isUpcoming = isUpcoming;
+    if(isFeatured !== undefined && isFeatured !== null ) filter.isFeatured = isFeatured;
+    if(isUpcoming !== undefined && isUpcoming !== null ) filter.isUpcoming = isUpcoming;
 
 
-    //todo impliment sorting 
+    //todo implement sorting 
     //fetching the products pageByPage
     const [allProducts, productCount] = await Promise.all([
         ProductVariant.find(filter)
@@ -223,9 +223,9 @@ export const getProductsByCategory = async (req, res) => {
         ? Math.max(parseInt(req.query.ps, 10), 1) || 10
         : 10;
     const category = req.query.category;
-
+    
     //no category exist check
-    const catid = await Category.findOne({ name: category }).select("_id").lean();
+    const catid = await Category.findOne({ _id: category }).select("_id").lean();
     if (!catid || !catid?._id) {
         return res.status(200).json({
             totalPages: 1,

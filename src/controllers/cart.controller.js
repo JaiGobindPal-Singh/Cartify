@@ -284,7 +284,10 @@ export const updateQuantity = async (req, res) => {
 export const getCart = async (req, res) => {
     const userId = req.user.id;
     
-    const currency = String(req.body?.currency || "").trim().toUpperCase();
+    const currency = String(req.query?.currency || "").trim().toUpperCase();
+    if(!currency){
+        req.status(400).json({error:"currency is required"});
+    }
     const cart = await Cart.findOne({ user: userId })
         .populate("items.product", "name pricing imageUrls pricingTiers purchaseOptions")
         .lean();

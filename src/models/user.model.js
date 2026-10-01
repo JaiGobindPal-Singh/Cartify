@@ -41,7 +41,7 @@ const userSchema = new mongoose.Schema(
         },
         uid: {                                         //represent phone number or unique id of admin in encrypted format
             type: String,
-            required: true,
+            // required: true,
             trim: true,
             unique: true,
         },

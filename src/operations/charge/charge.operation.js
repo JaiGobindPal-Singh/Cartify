@@ -8,7 +8,7 @@ export const updateCharge = async (chargeId, updates) => {
     return Charge.findByIdAndUpdate(
         chargeId,
         { $set: updates },
-        { new: true, runValidators: true }
+        { returnDocument: "after", runValidators: true }
     );
 };
 

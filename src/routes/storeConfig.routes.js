@@ -5,5 +5,5 @@ import { updateStoreConfigController,  getStoreConfigController } from '../contr
 const router = express.Router();
 
 router.post('/', authenticateUser, authorizeAdmin, updateStoreConfigController);
-router.get('/', authenticateUser, getStoreConfigController)
+router.get('/', getStoreConfigController)
 export default router;

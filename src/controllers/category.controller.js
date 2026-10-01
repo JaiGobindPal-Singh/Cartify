@@ -91,8 +91,8 @@ export const updateCategory = async (req, res) => {
 export const getAllCategories = async (req, res) => {
 
     const {
-        isFeatured = false
-    } = (req?.body || {});
+        isFeatured 
+    } = (req?.query || {});
 
     //fetching pageNumber and pageSize from query example:- https://a.com/hello?pn=2&ps=10
     const pageNumber = req.query.pn
@@ -103,7 +103,7 @@ export const getAllCategories = async (req, res) => {
         : 10; //default 10
 
     const filter = {};
-    filter.isFeatured = isFeatured;
+    if(isFeatured !== undefined && isFeatured !== null) filter.isFeatured = isFeatured;
     filter.isDeleted = false;
 
     const [categories, categoryCount] = await Promise.all([

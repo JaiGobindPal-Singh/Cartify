@@ -128,11 +128,6 @@ export const cartItemSchema = new mongoose.Schema({
         required: true
     },
     purchasePrice: {
-        currency: {
-            type: String,
-            required: true,
-            uppercase: true
-        },
         amount: {
             type: Number,
             required: true,

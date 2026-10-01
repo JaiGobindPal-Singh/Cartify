@@ -12,7 +12,7 @@ const router = express.Router();
 
 router.post("/", authenticateUser, createOrderController);
 router.get("/", authenticateUser, getUserOrdersController);
-router.get("/admin/all", authenticateUser, authorizeAdmin, getAllOrdersByAdminController);
+router.get("/all", authenticateUser, authorizeAdmin, getAllOrdersByAdminController);
 router.patch("/:orderId/status", authenticateUser, authorizeAdmin, updateOrderStatusByAdminController);
 router.get("/:orderId", authenticateUser, getOrderDetailsController);
 

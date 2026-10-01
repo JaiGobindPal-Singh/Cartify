@@ -35,6 +35,7 @@ const getAccessToken = async () => {
 };
 
 export const createOrder = async ({ amount, currency, referenceId } = {}) => {
+    console.log(amount, currency);
     const numericAmount = Number(amount);
     if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
         throw new Error("PayPal amount must be a positive number");
