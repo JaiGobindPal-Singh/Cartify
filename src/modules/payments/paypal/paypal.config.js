@@ -10,7 +10,7 @@ const environment = (process.env.PAYPAL_ENVIRONMENT || "sandbox").toLowerCase();
 
 export const paypalConfig = {
     clientId: requiredConfig("PAYPAL_CLIENT_ID"),
-    clientSecret: requiredConfig("PAYPAL_CLIENT_SECRET"),
+    clientSecret: requiredConfig("PAYPAL_SECRET"),
     webhookId: requiredConfig("PAYPAL_WEBHOOK_ID"),
     environment,
     baseUrl: environment === "live"

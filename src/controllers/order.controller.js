@@ -17,6 +17,7 @@ const handleError = (error, res) => {
     return res.status(500).json({ error: error.message || "Something went wrong on the server" });
 };
 
+//create order 
 export const createOrderController = async (req, res) => {
     try {
         const result = await createOrder({ userId: req.user.id, orderData: req.body || {} });
@@ -31,6 +32,7 @@ export const createOrderController = async (req, res) => {
     }
 };
 
+//update order status
 export const updateOrderStatusByAdminController = async (req, res) => {
     try {
         const { orderId } = req.params;
@@ -47,6 +49,7 @@ export const updateOrderStatusByAdminController = async (req, res) => {
     }
 };
 
+//handle payment result
 export const paymentResultController = async (req, res, next) => {
     try {
         const order = await handlePaymentResult(req.payment);

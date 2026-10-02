@@ -30,6 +30,7 @@ const normalizePayment = (eventType, event) => {
     };
 };
 
+//webhook controller manages payment capture/failure
 export const paypalWebhookController = async (req, res, next) => {
     try {
         const rawBody = getRawBody(req);

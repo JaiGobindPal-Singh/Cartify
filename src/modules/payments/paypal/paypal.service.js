@@ -1,5 +1,6 @@
 import { paypalConfig } from "./paypal.config.js";
 
+//make api request to paypal servers
 const paypalRequest = async (path, options = {}) => {
     const response = await fetch(`${paypalConfig.baseUrl}${path}`, {
         ...options,
@@ -15,6 +16,7 @@ const paypalRequest = async (path, options = {}) => {
     return body;
 };
 
+//generates the access token
 const getAccessToken = async () => {
     const credentials = Buffer
         .from(`${paypalConfig.clientId}:${paypalConfig.clientSecret}`)
@@ -34,8 +36,8 @@ const getAccessToken = async () => {
     return body.access_token;
 };
 
+//create paypal order
 export const createOrder = async ({ amount, currency, referenceId } = {}) => {
-    console.log(amount, currency);
     const numericAmount = Number(amount);
     if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
         throw new Error("PayPal amount must be a positive number");
@@ -44,7 +46,7 @@ export const createOrder = async ({ amount, currency, referenceId } = {}) => {
     if (!referenceId?.trim()) throw new Error("PayPal referenceId is required");
 
     const accessToken = await getAccessToken();
-    return paypalRequest("/v2/checkout/orders", {
+    const response = await paypalRequest("/v2/checkout/orders", {
         method: "POST",
         headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -61,8 +63,10 @@ export const createOrder = async ({ amount, currency, referenceId } = {}) => {
             }],
         }),
     });
+    return {...response, keyId: paypalConfig.clientId}
 };
 
+//verification
 export const verifyWebhookSignature = async ({ headers, webhookEvent }) => {
     const accessToken = await getAccessToken();
     return paypalRequest("/v1/notifications/verify-webhook-signature", {

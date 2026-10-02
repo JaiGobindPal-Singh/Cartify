@@ -231,18 +231,25 @@ export const updateOrderStatusByAdmin = async (orderId, status, reason) => {
 // This function is called after the payment gateway redirects back.
 // It checks whether the payment was successful and updates the order status.
 export const handlePaymentResult = async (payment) => {
+    //fetching transaction
     const transaction = await Transaction.findOne({ transactionOrderId: payment.transactionOrderId });
     if (!transaction) throw new Error("Payment transaction not found");
 
+    //transaction status is already updated
     if (transaction.status !== "PENDING") return Order.findById(transaction.order);
     transaction.transactionId = payment.transactionId;
     transaction.paymentMethod = payment.paymentMethod || transaction.paymentMethod;
+
+    //updating transaction
     transaction.status = payment.status;
     await transaction.save();
 
+    //updating order
     const order = await Order.findById(transaction.order);
     if (!order) throw new Error("Order not found for payment transaction");
     const inventory = order.items.map((item) => ({ product: item.product, quantity: item.quantity }));
+
+    //updating inventory based on order status
     if (payment.status === "SUCCESS") {
         await commitInventory(inventory);
         order.status = "ORDER_PLACED";
