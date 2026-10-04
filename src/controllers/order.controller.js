@@ -6,6 +6,7 @@ import {
     getUserOrders,
     getOrderDetails,
     getAllOrdersByAdmin,
+    abortOrderOnDismiss as abortOrder
 } from "../operations/order/order.operation.js";
 import { statusEnum } from "../constants/orderStatuses.js";
 
@@ -104,3 +105,21 @@ export const getAllOrdersByAdminController = async (req, res) => {
         return handleError(error, res);
     }
 };
+
+export const abortOrderOnDismiss = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        if (!validateMongoId(orderId)) {
+            return res.status(400).json({ error: "Invalid order id" });
+        }
+
+        const order = await abortOrder(orderId, req.user.id);
+        if (!order) return res.status(404).json({ error: "Order not found" });
+
+        return res.status(200).json({ success: true, order: cleanMongoObject(order) });
+    } catch (error) {
+        return handleError(error, res);
+    }
+};
+
+

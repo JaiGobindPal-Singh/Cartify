@@ -228,6 +228,34 @@ export const updateOrderStatusByAdmin = async (orderId, status, reason) => {
     return order;
 };
 
+// set order status to failed and release inventory incase order is failed
+const failOrderPayment = async (order, transaction) => {
+    const inventory = order.items.map((item) => ({ product: item.product, quantity: item.quantity }));
+    await releaseInventory(inventory);
+
+    if (transaction && transaction.status !== "FAILED") {
+        transaction.status = "FAILED";
+        await transaction.save();
+    }
+
+    order.status = "PAYMENT_FAILED";
+    order.statusHistory.push({ status: order.status });
+    await order.save();
+    return order;
+};
+
+//abort order in case payment portal closed
+export const abortOrderOnDismiss = async (orderId) => {
+    const order = await Order.findById(orderId);
+    if (!order || order.status !== "PAYMENT_PENDING") return order;
+
+    const transaction = await Transaction.findOne({ order: order._id });
+    if (transaction && transaction.status !== "PENDING") return order;
+
+    return failOrderPayment(order, transaction);
+};
+
+
 // This function is called after the payment gateway redirects back.
 // It checks whether the payment was successful and updates the order status.
 export const handlePaymentResult = async (payment) => {

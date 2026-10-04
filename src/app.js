@@ -24,6 +24,12 @@ const app = express();
 const __dirname = import.meta.dirname;
 const publicPath = path.join(__dirname, '..', 'public');
 const PORT = env.port;
+const frontendPath = path.join(__dirname,"..", "/front");
+const panelPath = path.join(__dirname,"..", "/panel");
+
+//serving frontend and admin panel
+app.use('/admin', express.static(panelPath));
+app.use('/',  express.static(frontendPath));
 
 app.use(express.static(publicPath));
 app.use(cookieParser());
@@ -52,9 +58,17 @@ app.use("/api/v0/charges", chargeRoutes);
 app.use("/api/v0/orders", orderRoutes);
 app.use("/api/v0/user", userRoutes);
 
+// Catch-all refresh handler for dashboard sub-routes (e.g., /dashboard/settings)
+    app.get('/admin*any', (req, res) => {
+        res.sendFile(path.join(panelPath, 'index.html'));
+    });
+    app.get('/*any', (req, res) => {
+        res.sendFile(path.join(frontendPath, 'index.html'));
+    });
 
 export const startServer = async () => {
   await connectDb();
+  console.log();
   await seedAdminUser();
   initializeStoreConfig();
 
