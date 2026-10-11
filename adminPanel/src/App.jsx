@@ -1,29 +1,60 @@
 import { Routes, Route, Outlet } from "react-router-dom";
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import Sidebar from "./components/sidebar/Sidebar";
 import Header from "./components/header/Header";
 import LoginPage from "./pages/LoginPage";
-
-const MainLayout = ()=>{
-  <div className="flex min-h-screen ">
-    {/* <Sidebar /> */}
-    <div className="flex min-h-screen w-full min-w-0 flex-1 flex-col overflow-hidden">
-      <Header />
-      <div className="flex-1 overflow-x-hidden overflow-y-auto">
-        <Outlet />
+import Homepage from "./pages/Homepage";
+import { useEffect, useState } from "react";
+import { getUser } from "./services/user.service";
+import { Link } from "react-router-dom";
+const MainLayout = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    //getting the user
+    getUser().then((userData) => {
+      setUser(userData);
+      setIsLoading(false);
+    });
+    
+  }, []);
+  
+  if(isLoading) return (
+    <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
+      <span className="text-lg font-semibold tracking-tight">Loading...</span>
+    </div>
+  );
+  
+  if (!user || !user?.id) {
+    return (
+      <div className="flex flex-col h-screen w-full items-center justify-center bg-background text-foreground">
+        <span className="text-lg font-semibold tracking-tight">Unauthorized</span>
+        
+        <Link to="/login">Login</Link>
+      </div>
+    );
+  }
+  return (
+    <div className="flex min-h-screen w-full bg-background text-foreground">
+      <Sidebar user={user} />
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col overflow-hidden bg-background md:ml-64">
+        <Header user={user} />
+        <div className="flex-1 overflow-x-hidden overflow-y-auto bg-background">
+          <Outlet context={user} />
+        </div>
       </div>
     </div>
-  </div>
-}
+  );
+};
+
 function App() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />}/>
-      <Route element={<MainLayout/>}>
-      
+      <Route path="/login" element={<LoginPage />} />
+      <Route element={<MainLayout />}>
+        <Route path="/" element={<Homepage />} />
       </Route>
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;

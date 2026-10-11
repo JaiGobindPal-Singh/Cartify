@@ -6,7 +6,7 @@ import { generateNotification } from "../utils/notification.utils.js";
 
 export default function LoginPage() {
     const navigate = useNavigate();
-    const [phone, setPhone] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState("");
@@ -16,9 +16,13 @@ export default function LoginPage() {
         event.preventDefault();
         setError("");
 
-        const normalizedPhone = phone.trim();
-        if (!/^\d{10}$/.test(normalizedPhone)) {
-            setError("Enter a valid 10-digit phone number.");
+        const normalizedEmail = email.trim();
+        if(normalizedEmail.length === 0) {
+            setError("Please enter your email address.");
+            return;
+        }
+        if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+            setError("Please enter a valid email address.");
             return;
         }
         if (password.trim().length < 8) {
@@ -28,7 +32,7 @@ export default function LoginPage() {
 
         setIsSubmitting(true);
         try {
-            await loginUser(normalizedPhone, "", password);
+            await loginUser(null, normalizedEmail, password);
             generateNotification("Welcome back")();
             navigate("/");
         } catch {
@@ -40,15 +44,15 @@ export default function LoginPage() {
     };
 
     return (
-        <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background-main px-4 py-10 text-slate-100 sm:px-6 lg:px-8">
+        <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background-main px-4 py-10 text-slate-100 sm:px-6 lg:px-8 bg-linear-to-br from-slate-900 via-slate-800 to-slate-900">
             <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
                 <div className="absolute -left-32 -top-36 h-96 w-96 rounded-full bg-primary/15 blur-3xl" />
-                <div className="absolute -bottom-48 -right-28 h-[30rem] w-[30rem] rounded-full bg-slate-600/20 blur-3xl" />
-                <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_0.7px,transparent_0.7px)] [background-size:24px_24px] opacity-[0.07]" />
+                <div className="absolute -bottom-48 -right-28 h-120 w-120 rounded-full bg-slate-600/20 blur-3xl" />
+                <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_0.7px,transparent_0.7px)] bg-size-[24px_24px] opacity-[0.07]" />
             </div>
 
-            <section className="relative grid w-full max-w-5xl overflow-hidden rounded-3xl border border-slate-700/80 bg-slate-800 shadow-2xl shadow-black/25 lg:min-h-[610px] lg:grid-cols-[1fr_0.9fr]">
-                <div className="relative hidden flex-col justify-between overflow-hidden bg-gradient-to-br from-slate-700 via-slate-800 to-slate-800 p-10 text-slate-100 lg:flex xl:p-14">
+            <section className="relative grid w-full max-w-5xl overflow-hidden rounded-3xl border border-slate-700/80 bg-slate-800 shadow-2xl shadow-black/25 lg:min-h-152.5 lg:grid-cols-[1fr_0.9fr]">
+                <div className="relative hidden flex-col justify-between overflow-hidden bg-linear-to-br from-slate-700 via-slate-800 to-slate-800 p-10 text-slate-100 lg:flex xl:p-14">
                     <div aria-hidden="true" className="absolute inset-0">
                         <div className="absolute -right-28 -top-24 h-80 w-80 rounded-full border border-slate-300/10" />
                         <div className="absolute -right-16 -top-12 h-56 w-56 rounded-full border border-slate-300/10" />
@@ -82,7 +86,7 @@ export default function LoginPage() {
                             <div className="mb-7 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20 text-indigo-300 ring-1 ring-primary/30">
                                 <ShieldCheck aria-hidden="true" size={24} />
                             </div>
-                            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">Cartify admin</p>
+                            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">GRD AMRITSAR admin</p>
                         </div>
 
                         <div className="mb-8">
@@ -93,22 +97,21 @@ export default function LoginPage() {
 
                         <form className="space-y-5" onSubmit={handleSubmit} noValidate>
                             <div>
-                                <label htmlFor="phone" className="mb-2 block text-sm font-medium text-slate-300">
-                                    Phone number
+                                <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-300">
+                                    Email address
                                 </label>
                                 <input
-                                    id="phone"
-                                    name="phone"
-                                    type="tel"
-                                    autoComplete="tel"
-                                    inputMode="numeric"
-                                    maxLength={10}
-                                    value={phone}
+                                    id="email"
+                                    name="email"
+                                    type="email"
+                                    autoComplete="email"
+                                    inputMode=""
+                                    value={email}
                                     onChange={(event) => {
                                         setError("");
-                                        setPhone(event.target.value);
+                                        setEmail(event.target.value);
                                     }}
-                                    placeholder="10-digit phone number"
+                                    placeholder="Enter your email address"
                                     className="w-full rounded-xl border border-slate-600 bg-slate-700/50 px-4 py-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-400 hover:border-slate-500 focus:border-indigo-400 focus:ring-4 focus:ring-primary/20"
                                     aria-invalid={Boolean(error)}
                                     required

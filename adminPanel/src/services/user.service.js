@@ -4,23 +4,23 @@ import userStore from "../store/user.store.js";
 
 export const getUser = async () => {
     const { name, uid, role, id, email } = userStore.getState();
-    let user = {};
+    let user;
 
     //if user is not stored make auto login request
     if (!name || !role || !id || !email) {
-        const response = await api.get("/auth").catch(e=>null);
+        const response = await api.get("/auth").catch(e => null);
         //if user is not logged in return {}
-        if(!response){
+        if (!response) {
             return {}
         }
-        
+
         const payload = response?.data;
         const serverUser = payload?.user;
         if (serverUser) {
             user = {
                 name: serverUser?.name || "",
                 uid: serverUser?.uid || "",
-                email:serverUser?.email || "",
+                email: serverUser?.email || "",
                 id: serverUser?.id || ""
             };
             if (user.id) {
@@ -28,30 +28,30 @@ export const getUser = async () => {
             }
         }
     } else {   //use stored details
-        user = { name, uid, role, id };
+        user = { name, uid, email, id };
     }
     return user;
 };
 
 export const loginUser = async (uid, email, password) => {
-    
-    if ( !password) {
-        const er =  new Error("Password is Required");
+
+    if (!password) {
+        const er = new Error("Password is Required");
         er.code = 400;
         throw er;
     }
 
     const reqBody = {};
-    if(uid) reqBody.uid = uid;
-    if(email) reqBody.email = email;
+    if (uid) reqBody.uid = uid;
+    if (email) reqBody.email = email;
     const response = await api.post("/auth/login", {
         ...reqBody,
         password
-    }).catch(e=>null);
+    }).catch(e => null);
     const payload = response?.data;
     const serverUser = payload?.user;
     if (!serverUser) {
-        const er =  new Error("Invalid Credentials ");
+        const er = new Error("Invalid Credentials ");
         er.code = 404;
         throw er;
     }
@@ -63,7 +63,7 @@ export const loginUser = async (uid, email, password) => {
         email: serverUser?.email || ""
     };
     if (!normalizedUser.id) {
-        const er =  new Error("Invalid Credentials");
+        const er = new Error("Invalid Credentials");
         er.code = 404;
         throw er;
     }
@@ -74,7 +74,10 @@ export const loginUser = async (uid, email, password) => {
 };
 
 export const logoutUser = async () => {
-    const response = await api.post("/auth/logout");
+    let response;
+
+    response = await api.post("/auth/logout");
+
     userStore.getState().resetUser();
     return response?.data ?? { success: true };
 }

@@ -18,7 +18,7 @@ const handleError = (error, res) => {
     return res.status(500).json({ error: error.message || "Something went wrong on the server" });
 };
 
-//create order 
+//create order
 export const createOrderController = async (req, res) => {
     try {
         const result = await createOrder({ userId: req.user.id, orderData: req.body || {} });
@@ -78,8 +78,8 @@ export const getUserOrdersController = async (req, res) => {
 
 export const getOrderDetailsController = async (req, res) => {
     try {
-        if (!validateMongoId(req.params.orderId)) return res.status(400).json({ error: "Invalid order id" });
-        const order = await getOrderDetails(req.params.orderId, req.user.id);
+      if (!validateMongoId(req.params.orderId)) return res.status(400).json({ error: "Invalid order id" });
+      const order = await getOrderDetails(req.params.orderId, req.user.id, req.user.role);
         if (!order) return res.status(404).json({ error: "Order not found" });
         return res.status(200).json({ success: true, order });
     } catch (error) {
@@ -121,5 +121,3 @@ export const abortOrderOnDismiss = async (req, res) => {
         return handleError(error, res);
     }
 };
-
-

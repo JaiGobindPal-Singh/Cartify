@@ -123,7 +123,7 @@ export const createOrder = async ({ userId, orderData }) => {
 
     // Convert cart items into a clean snapshot for payment calculation.
     const snapshot = buildCartSnapshot(cart, normalizedCurrency);
-    
+
     // Add delivery and payment charges based on customer location and payment method.
     const charges = await getApplicableCharges({
         country: deliveryAddress.country,
@@ -319,9 +319,9 @@ export const getUserOrders = async (userId, { pageNumber = 1, pageSize = 10 } = 
     };
 };
 
-export const getOrderDetails = async (orderId, userId) => {
+export const getOrderDetails = async (orderId, userId, role) => {
     const filter = { _id: orderId };
-    if (userId) filter.user = userId;
+    if (userId && role.toUpperCase() !== "ADMIN") filter.user = userId;  //allow admin to access all orders
     return Order.findOne(filter)
         .populate("items.product", "name imageUrls")
         .populate("deliveryDetails.deliveryType", "optionName")
@@ -337,10 +337,10 @@ export const getAllOrdersByAdmin = async (status, { pageNumber = 1, pageSize = 1
     const [orders, totalOrders] = await Promise.all([
         Order.find(filter)
             .populate("user", "name email")
-            .populate("transaction")
             .sort({ createdAt: -1 })
             .skip((normalizedPageNumber - 1) * normalizedPageSize)
             .limit(normalizedPageSize)
+            .select("status deliveryDetails.deliveryType billing.totalBill billing.currency createdAt")
             .lean(),
         Order.countDocuments(filter),
     ]);

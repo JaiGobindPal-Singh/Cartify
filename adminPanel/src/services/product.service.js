@@ -41,6 +41,45 @@ export const fetchProducts = async (pageNo, isFeatured, isUpcoming) => {
         throw er;
     }
 };
+export const fetchLowStockProducts = async (pageNo, isFeatured, isUpcoming) => {
+    try {
+        const { products } = useProductStore.getState();
+
+        //return cached products in store
+        if (!isFeatured && !isUpcoming && products && products[pageNo]) {
+            return { ...products[pageNo], currentPage: pageNo };
+        }
+
+        //fetching from api if products not cached
+        const response = await api.get("products", {
+            params: { ps: 10, pn: pageNo, isFeatured, isUpcoming },
+        });
+        const payload = response?.data ?? {};
+
+        //storing in store if products are not featured or not upcoming
+        if (!isFeatured && !isUpcoming) {
+            useProductStore.getState().setProducts({
+                currentPage: payload?.currentPage ?? pageNo,
+                hasNextPage: payload?.hasNextPage ?? false,
+                hasPrevPage: payload?.hasPrevPage ?? pageNo > 1,
+                products: payload?.products ?? [],
+            });
+        }
+        //return standard response
+        return {
+            currentPage: payload?.currentPage ?? pageNo,
+            hasNextPage: payload?.hasNextPage ?? false,
+            hasPrevPage: payload?.hasPrevPage ?? pageNo > 1,
+            items: payload?.products ?? [],
+        }
+
+    } catch (e) {
+        const er = new Error("error fetching products");
+        er.code = 404;
+        er.cause = e;
+        throw er;
+    }
+};
 export const fetchProductById = async (productId) => {
     try {
         const response = await api.get(`products/${productId}`);
