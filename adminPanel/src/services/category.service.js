@@ -1,7 +1,7 @@
 import api from "../configs/axios.config.js"
 import useCategoryStore from "../store/category.store.js"
 
-export const fetchCategories = async (pageNo, isFeatured) => {
+export const fetchCategories = async (pageNo, pageSize, isFeatured) => {
     try {
         const { categories } = useCategoryStore.getState();
         if (!isFeatured && categories && categories[pageNo]) {
@@ -9,7 +9,7 @@ export const fetchCategories = async (pageNo, isFeatured) => {
         }
         //call api only if categories are not stored
         const response = await api.get("categories", {
-            params: { pn: pageNo, ps: 10, isFeatured },
+            params: { pn: pageNo, ps: pageSize || 10, isFeatured },
         });
         const payload = response?.data ?? {};
 
@@ -25,7 +25,8 @@ export const fetchCategories = async (pageNo, isFeatured) => {
         return {
             categories: payload?.categories ?? [],
             hasNextPage: payload?.hasNextPage ?? false,
-            hasPrevPage: payload?.hasPrevPage ?? pageNo > 1
+            hasPrevPage: payload?.hasPrevPage ?? pageNo > 1,
+            currentPage:payload?.currentPage ?? pageNo
         };
     } catch (e) {
         const error = new Error("error fetching categories");
@@ -83,13 +84,30 @@ export const deleteCategory = async (categoryId) => {
     if (!categoryId) {
         throw new Error("Category ID is required");
     }
-
     try {
         const response = await api.delete(`/categories/${categoryId}`);
+        
+        useCategoryStore.getState().resetCategories();
         return response.data;
     } catch (e) {
+        // Wrap the delete failure in a category-specific error so the UI can show a clear message.
         const error = new Error("error deleting category");
         error.cause = e;
         throw error;
     }
 }  
+export const fetchCategoryById = async (catId) => {
+    try {
+        const response = await api.get(`categories/${catId}`);
+        const payload = response?.data ?? {};
+
+        if(!payload){
+            throw new Error("category not found");
+        }
+        return payload
+    } catch (e) {
+        const error = new Error("error fetching category");
+        error.cause = e;
+        throw error;
+    }
+}

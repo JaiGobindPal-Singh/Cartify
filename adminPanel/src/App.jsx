@@ -6,6 +6,10 @@ import Homepage from "./pages/Homepage";
 import { useEffect, useState } from "react";
 import { getUser } from "./services/user.service";
 import { Link } from "react-router-dom";
+import Products from "./pages/products/Products";
+import ProductDetails from "./pages/products/ProductDetails";
+import Categories from "./pages/categories/Categories";
+import CategoryDetails from "./pages/categories/CategoryDetails";
 const MainLayout = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
@@ -51,7 +55,14 @@ function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route element={<MainLayout />}>
+      {/* dashboard */}
         <Route path="/" element={<Homepage />} />
+        {/* product routes */}
+        <Route path="/products" element={<Products />} />
+        <Route path="/products/:id" element={<ProductDetails />} />
+        
+        <Route path="/categories" element={<Categories/>}/>
+        <Route path="/categories/:id" element={<CategoryDetails/>}/>
       </Route>
     </Routes>
   );

@@ -4,10 +4,11 @@ export const generateNotification = (message) => {
         position: "bottom-right",
         autoClose: 3000,
         hideProgressBar: false,
-        closeOnClick: false,
+        closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
-        className: "bg-[#FFFFFF] text-[#212529] border border-[#E9ECEF] rounded-lg shadow-sm font-medium",
-        progressClassName: "bg-[#6C757D]"
-    });
+        theme: "dark",
+        className: "!rounded-xl !border !border-border !bg-card !font-medium !text-foreground !shadow-xl !shadow-black/20",
+        progressClassName: "!bg-primary"
+    }); 
 }

@@ -91,7 +91,7 @@ export const updateCategory = async (req, res) => {
 export const getAllCategories = async (req, res) => {
 
     const {
-        isFeatured 
+        isFeatured
     } = (req?.query || {});
 
     //fetching pageNumber and pageSize from query example:- https://a.com/hello?pn=2&ps=10
@@ -145,4 +145,12 @@ export const getChildCategories = async (req, res) => {
 
     return res.status(200).json({ categories });
 
+}
+
+export const getCategoryById = async (req, res) => {
+  const { categoryId } = req.params;
+  const category = await Category.findById(categoryId).lean();
+  category.id = category._id;
+  delete category._id;
+  return res.status(200).json({ category });
 }

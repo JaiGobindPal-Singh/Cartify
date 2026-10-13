@@ -41,45 +41,12 @@ export const fetchProducts = async (pageNo, isFeatured, isUpcoming) => {
         throw er;
     }
 };
+
+//todo later backend need to be updated to support low stock products fetching
 export const fetchLowStockProducts = async (pageNo, isFeatured, isUpcoming) => {
-    try {
-        const { products } = useProductStore.getState();
-
-        //return cached products in store
-        if (!isFeatured && !isUpcoming && products && products[pageNo]) {
-            return { ...products[pageNo], currentPage: pageNo };
-        }
-
-        //fetching from api if products not cached
-        const response = await api.get("products", {
-            params: { ps: 10, pn: pageNo, isFeatured, isUpcoming },
-        });
-        const payload = response?.data ?? {};
-
-        //storing in store if products are not featured or not upcoming
-        if (!isFeatured && !isUpcoming) {
-            useProductStore.getState().setProducts({
-                currentPage: payload?.currentPage ?? pageNo,
-                hasNextPage: payload?.hasNextPage ?? false,
-                hasPrevPage: payload?.hasPrevPage ?? pageNo > 1,
-                products: payload?.products ?? [],
-            });
-        }
-        //return standard response
-        return {
-            currentPage: payload?.currentPage ?? pageNo,
-            hasNextPage: payload?.hasNextPage ?? false,
-            hasPrevPage: payload?.hasPrevPage ?? pageNo > 1,
-            items: payload?.products ?? [],
-        }
-
-    } catch (e) {
-        const er = new Error("error fetching products");
-        er.code = 404;
-        er.cause = e;
-        throw er;
-    }
+    return fetchProducts(pageNo, isFeatured, isUpcoming);
 };
+
 export const fetchProductById = async (productId) => {
     try {
         const response = await api.get(`products/${productId}`);
@@ -200,7 +167,6 @@ export const createProduct = async (name, category, keywords = [], description =
 
 export const updateProduct = async (productId, name, category = "", keywords = [], description = "", sections = [], pricing = [], purchaseOptions = [], isFeatured, availableStock, reservedStock) => {
 
-
     //validate pricing based on available currencies
     const storeConfig = await fetchStoreConfig();
     const supportedCurrencies = storeConfig.supportedCurrencies;
@@ -242,14 +208,20 @@ export const updateProduct = async (productId, name, category = "", keywords = [
     return response.data;
 }
 
-export const deleteProduct = async (productId) =>{
-    try{
-        const response = await api.delete(`/products${productId}`);
-        if(!response.data.success){
+export const deleteProduct = async (productId) => {
+    if (!productId) {
+        throw new Error("Product ID is required");
+    }
+
+    try {
+        const response = await api.delete(`/products/${productId}`);
+        if (response?.data?.success === false) {
             throw new Error("unable to delete product try again later");
         }
-    }catch(e){
-        const err = new Error("Unable to delete product at a moment. Try again later");
+        clearProductStore();
+        return response?.data;
+    } catch (e) {
+        const err = new Error("Unable to delete product. Try again later");
         err.cause = e;
         throw err;
     }
@@ -268,7 +240,7 @@ export const deleteImage = async (productId, imageUrl) => {
     }
 }
 
-export const addImage = async (productId, images) => {
+export const addImages = async (productId, images) => {
     let product = null;
     try{
         //getting product by id
