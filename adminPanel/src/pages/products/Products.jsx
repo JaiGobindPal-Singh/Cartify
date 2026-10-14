@@ -268,13 +268,13 @@ function Products() {
           )}
         </label>
         <div className="md:justify-self-end">
-          <button
-            type="button"
+          <Link
+            to="/products/create"
             className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background md:w-auto"
           >
             <Plus aria-hidden="true" className="h-4 w-4" />
             Add New Product
-          </button>
+          </Link>
         </div>
       </div>
 

@@ -8,7 +8,9 @@ import { getUser } from "./services/user.service";
 import { Link } from "react-router-dom";
 import Products from "./pages/products/Products";
 import ProductDetails from "./pages/products/ProductDetails";
+import CreateProduct from "./pages/products/CreateProduct";
 import Categories from "./pages/categories/Categories";
+import CreateCategory from "./pages/categories/CreateCategory";
 import CategoryDetails from "./pages/categories/CategoryDetails";
 const MainLayout = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -59,9 +61,11 @@ function App() {
         <Route path="/" element={<Homepage />} />
         {/* product routes */}
         <Route path="/products" element={<Products />} />
+        <Route path="/products/create" element={<CreateProduct />} />
         <Route path="/products/:id" element={<ProductDetails />} />
         
         <Route path="/categories" element={<Categories/>}/>
+        <Route path="/categories/create" element={<CreateCategory/>}/>
         <Route path="/categories/:id" element={<CategoryDetails/>}/>
       </Route>
     </Routes>

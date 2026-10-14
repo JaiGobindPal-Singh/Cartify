@@ -115,7 +115,7 @@ export const fetchProductsByCategory = async (page, category) => {
         throw er;
     }
 }
-export const createProduct = async (name, category, keywords = [], description = "", sections = [], pricing = [], purchaseOptions = [], isFeatured = false, availableStock = 0, images) => {
+export const createProduct = async (name, category, keywords = [], description = "", sections = [], pricing = [], purchaseOptions = [], isFeatured = false, availableStock = 0, images, isUpcoming = false) => {
     if (!name || !pricing.length) {
         throw new Error("Product name and pricing is required");
     }
@@ -152,6 +152,7 @@ export const createProduct = async (name, category, keywords = [], description =
         pricing,
         purchaseOptions,
         isFeatured,
+        isUpcoming,
         availableStock
     }
     const formData = new FormData();

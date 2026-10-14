@@ -43,7 +43,9 @@ export const createCategory = async (catName, isFeatured = false, image) => {
     const formData = new FormData();
     formData.append("name", catName);
     formData.append("isFeatured", isFeatured);
-    formData.append("icon", image);
+    if (image) {
+        formData.append("icon", image);
+    }
 
     try{
         const newCat = await api.post("/categories", formData);
