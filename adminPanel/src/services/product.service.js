@@ -116,8 +116,8 @@ export const fetchProductsByCategory = async (page, category) => {
     }
 }
 export const createProduct = async (name, category, keywords = [], description = "", sections = [], pricing = [], purchaseOptions = [], isFeatured = false, availableStock = 0, images, isUpcoming = false) => {
-    if (!name || !pricing.length) {
-        throw new Error("Product name and pricing is required");
+    if (!name || !category || !pricing.length) {
+        throw new Error("Product name, category, and pricing are required");
     }
 
     //validate pricing based on available currencies
@@ -166,8 +166,13 @@ export const createProduct = async (name, category, keywords = [], description =
     return response.data;
 }
 
-export const updateProduct = async (productId, name, category = "", keywords = [], description = "", sections = [], pricing = [], purchaseOptions = [], isFeatured, availableStock, reservedStock) => {
-
+export const updateProduct = async (productId, productData) => {
+    if (!productId) {
+        throw new Error("Product ID is required");
+    }
+    if (!productData || typeof productData !== "object") {
+        throw new Error("Product data is required");
+    }
     //validate pricing based on available currencies
     const storeConfig = await fetchStoreConfig();
     const supportedCurrencies = storeConfig.supportedCurrencies;
@@ -175,15 +180,13 @@ export const updateProduct = async (productId, name, category = "", keywords = [
         throw new Error("no currency defined define is setting then add product");
     }
     //verifying pricing is entered for all currencies
-    if (pricing && pricing.length) {
-        const inputCurrencies = pricing?.map(pp => {
-            return pp.currency
-        });
+    if (productData.pricing) {
+        const inputCurrencies = productData.pricing.map((price) => price.currency);
         if (!arraysMatch(inputCurrencies, supportedCurrencies)) throw new Error("all currencies prices are required");
 
         //verify purchase options
-        if (purchaseOptions && purchaseOptions.length) {
-            purchaseOptions.forEach(option => {
+        if (productData.purchaseOptions?.length) {
+            productData.purchaseOptions.forEach(option => {
                 option.optionValues.forEach(ov => {
                     if (ov.pricingChange.length !== supportedCurrencies.length) {
                         throw new Error("inconsistent options pricing change");
@@ -192,21 +195,14 @@ export const updateProduct = async (productId, name, category = "", keywords = [
             });
         }
     }
-    //create request object
-    const reqData = {};
-    if (name) reqData.name = name;
-    if (category) reqData.category = category;
-    if (keywords?.length) reqData.keywords = keywords;
-    if (description) reqData.description = description;
-    if (sections?.length) reqData.sections = sections;
-    if (pricing?.length) reqData.pricing = pricing;
-    if (purchaseOptions?.length) reqData.purchaseOptions = purchaseOptions;
-    if (typeof isFeatured === "boolean") reqData.isFeatured = isFeatured;
-    if (typeof availableStock === "number") reqData.availableStock = availableStock;
-    if (typeof reservedStock === "number") reqData.reservedStock = reservedStock;
-
-    const response = await api.put(`/products/${productId}`, reqData);
-    return response.data;
+    try{
+        console.log(productData)
+        const response = await api.put(`/products/${productId}`, productData);
+        clearProductStore();
+        return response.data;
+    }catch(e){
+        console.log("000",e?.response.data);
+    }
 }
 
 export const deleteProduct = async (productId) => {
@@ -233,6 +229,7 @@ export const deleteImage = async (productId, imageUrl) => {
         const response = await api.delete(`/products/images/${productId}`, {
             data: { imageUrl },
         });
+        clearProductStore();
         return response.data;
     } catch (e) {
         const err = new Error("Unable to delete image at a moment. Try again later");
@@ -242,28 +239,25 @@ export const deleteImage = async (productId, imageUrl) => {
 }
 
 export const addImages = async (productId, images) => {
-    let product = null;
-    try{
-        //getting product by id
-        product = (await fetchProductById(productId)).data.product;
-    }catch(e){
-        const err = new Error("product dont exist or is deleted");
-        err.cause = e;
-        throw err;
+    if (!productId || !Array.isArray(images) || images.length === 0) {
+        throw new Error("Product ID and at least one image are required");
     }
-    if(product.imageUrls.length + images.length >= 5){
-        throw new Error("maximum 5 images are allowed");
+    const product = await fetchProductById(productId);
+    const currentImageCount = Array.isArray(product?.imageUrls)
+        ? product.imageUrls.length
+        : 0;
+    if (currentImageCount + images.length > 5) {
+        throw new Error("Maximum 5 images are allowed");
     }
 
-    try{
+    try {
         const formData = new FormData();
-        images.forEach(element => {
-            formData.append("images", element);
-        });
-        const response =await api.post(`/products/images${productId}`, formData);
-        return response.data.imageUrls
-    }catch(e){
-        const err = new Error("unable to add image to product");
+        images.forEach((image) => formData.append("images", image));
+        const response = await api.post(`/products/images/${productId}`, formData);
+        clearProductStore();
+        return response.data.imageUrls;
+    } catch (e) {
+        const err = new Error("Unable to add images to product");
         err.cause = e;
         throw err;
     }

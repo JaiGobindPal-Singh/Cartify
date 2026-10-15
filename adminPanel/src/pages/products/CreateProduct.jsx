@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
     ArrowLeft,
     ImagePlus,
@@ -9,7 +9,14 @@ import {
     Trash2,
 } from "lucide-react";
 import { fetchCategories } from "../../services/category.service";
-import { createProduct } from "../../services/product.service";
+import {
+    addImages as uploadProductImages,
+    createProduct,
+    deleteImage,
+    fetchProductById,
+    updateProduct,
+} from "../../services/product.service";
+import api from "../../configs/axios.config";
 import { fetchStoreConfig } from "../../services/storeConfig.service";
 import { generateNotification } from "../../utils/notification.utils";
 
@@ -41,6 +48,7 @@ function createOptionValue(currencies) {
 }
 
 function getCategoryId(category) {
+    if (typeof category === "string") return category;
     return category?.id ?? category?._id ?? "";
 }
 
@@ -60,6 +68,15 @@ function currencyLabel(currency) {
 function getCategories(result) {
     if (Array.isArray(result)) return result;
     return result?.categories ?? [];
+}
+
+function getImageSource(imageUrl) {
+    if (!imageUrl) return "";
+    try {
+        return new URL(imageUrl, api.defaults.baseURL).toString();
+    } catch {
+        return imageUrl;
+    }
 }
 
 function FieldError({ children, id }) {
@@ -87,8 +104,10 @@ function SectionTitle({ id, title, description, action }) {
     );
 }
 
-function CreateProduct() {
+function CreateProduct({ isEditing = false }) {
     const navigate = useNavigate();
+    const { id: routeProductId } = useParams();
+    const productId = isEditing ? routeProductId : "";
     const fileInputRef = useRef(null);
     const previewUrlsRef = useRef(new Set());
     const [categories, setCategories] = useState([]);
@@ -103,6 +122,9 @@ function CreateProduct() {
     const [keywordDraft, setKeywordDraft] = useState("");
     const [description, setDescription] = useState("");
     const [images, setImages] = useState([]);
+    const [existingImages, setExistingImages] = useState([]);
+    const [loadedProductId, setLoadedProductId] = useState("");
+    const [productLoadError, setProductLoadError] = useState(null);
     const [imageError, setImageError] = useState("");
     const [pricingInputs, setPricingInputs] = useState({});
     const [sections, setSections] = useState([]);
@@ -157,14 +179,16 @@ function CreateProduct() {
                     )
                     : [];
                 setCurrencies(supportedCurrencies);
-                setPricingInputs(
-                    Object.fromEntries(
-                        supportedCurrencies.map((currency) => [
-                            currency,
-                            { price: "", comparePrice: "" },
-                        ]),
-                    ),
-                );
+                if (!isEditing) {
+                    setPricingInputs(
+                        Object.fromEntries(
+                            supportedCurrencies.map((currency) => [
+                                currency,
+                                { price: "", comparePrice: "" },
+                            ]),
+                        ),
+                    );
+                }
             } catch (error) {
                 if (active) {
                     setConfigError(
@@ -181,7 +205,100 @@ function CreateProduct() {
         return () => {
             active = false;
         };
-    }, []);
+    }, [isEditing]);
+
+    useEffect(() => {
+        if (!isEditing) return undefined;
+        if (!productId) return undefined;
+        if (isCurrenciesLoading) return undefined;
+        let active = true;
+
+        const loadProduct = async () => {
+            try {
+                const product = await fetchProductById(productId);
+                if (!active) return;
+                if (!product || Object.keys(product).length === 0) {
+                    throw new Error("Product could not be found.");
+                }
+                setName(product.name ?? "");
+                setCategory(getCategoryId(product.category));
+                setKeywords(Array.isArray(product.keywords) ? product.keywords : []);
+                setDescription(product.description ?? "");
+                setSections(
+                    Array.isArray(product.sections)
+                        ? product.sections.map((section) => ({
+                            heading: section.heading ?? "",
+                            content: section.content ?? "",
+                            attributes: Array.isArray(section.attributes)
+                                ? section.attributes.map((attribute) => ({
+                                    name: attribute.name ?? "",
+                                    value: attribute.value ?? "",
+                                }))
+                                : [],
+                        }))
+                        : [],
+                );
+                setPricingInputs(
+                    Object.fromEntries(
+                        currencies.map((currency) => {
+                            const price = product.pricing?.find(
+                                (item) => item.currency === currency,
+                            );
+                            return [
+                                currency,
+                                {
+                                    price: price?.price ?? "",
+                                    comparePrice: price?.comparePrice ?? "",
+                                },
+                            ];
+                        }),
+                    ),
+                );
+                setPurchaseOptions(
+                    Array.isArray(product.purchaseOptions)
+                        ? product.purchaseOptions.map((option) => ({
+                            optionName: option.optionName ?? "",
+                            optionValues: Array.isArray(option.optionValues)
+                                ? option.optionValues.map((value) => ({
+                                    option: value.option ?? "",
+                                    pricingChange: currencies.map((currency) => ({
+                                        currency,
+                                        priceChange:
+                                            value.pricingChange?.find(
+                                                (item) => item.currency === currency,
+                                            )?.priceChange ?? "0",
+                                    })),
+                                }))
+                                : [],
+                        }))
+                        : [],
+                );
+                setAvailableStock(String(product.availableStock ?? 0));
+                setIsFeatured(Boolean(product.isFeatured));
+                setIsUpcoming(Boolean(product.isUpcoming));
+                setExistingImages(
+                    Array.isArray(product.imageUrls) ? product.imageUrls : [],
+                );
+                setLoadedProductId(productId);
+            } catch (error) {
+                if (active) {
+                    setProductLoadError(
+                        {
+                            productId,
+                            message:
+                                error?.message ||
+                                "Product details could not be loaded.",
+                        },
+                    );
+                }
+            }
+        };
+
+        loadProduct();
+        return () => {
+            active = false;
+        };
+    }, [currencies, isCurrenciesLoading, isEditing, productId]);
 
     useEffect(
         () => () => {
@@ -212,7 +329,7 @@ function CreateProduct() {
             setImageError(`${invalidFile.name} is not a supported image format.`);
             return;
         }
-        if (images.length + selectedFiles.length > 5) {
+        if (existingImages.length + images.length + selectedFiles.length > 5) {
             setImageError("You can add up to 5 images.");
             return;
         }
@@ -234,6 +351,20 @@ function CreateProduct() {
         }
         setImages((current) => current.filter((_, imageIndex) => imageIndex !== index));
         setImageError("");
+    };
+
+    const removeExistingImage = async (imageUrl) => {
+        try {
+            await deleteImage(productId, imageUrl);
+            setExistingImages((current) =>
+                current.filter((url) => url !== imageUrl),
+            );
+            setImageError("");
+        } catch (error) {
+            const message = error?.message || "Image could not be removed.";
+            setImageError(message);
+            generateNotification(message)();
+        }
     };
 
     const setSectionField = (sectionIndex, key, value) => {
@@ -314,6 +445,7 @@ function CreateProduct() {
     const validateForm = () => {
         const errors = {};
         if (!name.trim()) errors.name = "Product name is required.";
+        if (!category) errors.category = "Choose a category.";
         if (currencies.length === 0) {
             errors.currencies = "Add supported currencies in store settings first.";
         }
@@ -421,23 +553,53 @@ function CreateProduct() {
 
         setIsSaving(true);
         try {
-            await createProduct(
-                name.trim(),
-                category,
-                keywords,
-                description.trim(),
-                cleanSections,
-                pricing,
-                cleanPurchaseOptions,
-                isFeatured,
-                Number(availableStock),
-                images.map(({ file }) => file),
-                isUpcoming,
-            );
-            generateNotification("Product created successfully.")();
+            if (isEditing) {
+                await updateProduct(productId, {
+                    name: name.trim(),
+                    category,
+                    keywords,
+                    description: description.trim(),
+                    sections: cleanSections,
+                    pricing,
+                    purchaseOptions: cleanPurchaseOptions,
+                    isFeatured,
+                    isUpcoming,
+                    availableStock: Number(availableStock),
+                });
+                if (images.length > 0) {
+                    try {
+                        await uploadProductImages(
+                            productId,
+                            images.map(({ file }) => file),
+                        );
+                    } catch (error) {
+                        throw new Error(
+                            `Product details were saved, but images could not be added: ${error?.message || "Please try again."}`,
+                        );
+                    }
+                }
+                generateNotification("Product updated successfully.")();
+            } else {
+                await createProduct(
+                    name.trim(),
+                    category,
+                    keywords,
+                    description.trim(),
+                    cleanSections,
+                    pricing,
+                    cleanPurchaseOptions,
+                    isFeatured,
+                    Number(availableStock),
+                    images.map(({ file }) => file),
+                    isUpcoming,
+                );
+                generateNotification("Product created successfully.")();
+            }
             navigate("/products");
         } catch (error) {
-            const message = error?.message || "Product could not be created.";
+            const message =
+                error?.message ||
+                `Product could not be ${isEditing ? "updated" : "created"}.`;
             setSubmitError(message);
             generateNotification(message)();
         } finally {
@@ -452,6 +614,26 @@ function CreateProduct() {
         Boolean(configError) ||
         currencies.length === 0;
 
+    const isProductLoaded = !isEditing || loadedProductId === productId;
+    const productLoadErrorMessage = !productId
+        ? "Product ID is missing."
+        : productLoadError?.productId === productId
+            ? productLoadError.message
+            : "";
+
+    if (isEditing && !isProductLoaded) {
+        return (
+            <main className="mx-auto w-full max-w-375 px-4 py-6 text-foreground sm:px-6 lg:px-8 lg:py-8">
+                <Link to="/products" className="text-sm text-muted-foreground hover:text-foreground">
+                    Back to products
+                </Link>
+                <p className="mt-6" role={productLoadErrorMessage ? "alert" : "status"}>
+                    {productLoadErrorMessage || "Loading product…"}
+                </p>
+            </main>
+        );
+    }
+
     return (
         <main className="mx-auto w-full max-w-375 px-4 py-6 text-foreground sm:px-6 lg:px-8 lg:py-8">
             <Link
@@ -465,7 +647,7 @@ function CreateProduct() {
             <div className="mb-6 mt-4 border-b border-border pb-5">
                 <p className="text-sm font-medium text-primary">Products</p>
                 <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-                    Create product
+                    {isEditing ? "Edit product" : "Create product"}
                 </h1>
                 <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
                     Add product details, pricing, images, and purchase options.
@@ -477,7 +659,7 @@ function CreateProduct() {
                     <SectionTitle
                         id="basic-info-heading"
                         title="Basic information"
-                        description="Describe the product and optionally assign it to a category."
+                        description="Describe the product and assign it to a category."
                     />
                     <div className="grid gap-5 md:grid-cols-2">
                         <div>
@@ -512,6 +694,7 @@ function CreateProduct() {
                                 value={category}
                                 onChange={(event) => setCategory(event.target.value)}
                                 disabled={isCategoriesLoading || Boolean(categoryError)}
+                                aria-invalid={Boolean(validationErrors.category)}
                             >
                                 <option value="">
                                     {isCategoriesLoading
@@ -520,7 +703,7 @@ function CreateProduct() {
                                             ? "Categories unavailable"
                                             : categories.length === 0
                                                 ? "No categories available"
-                                                : "No category"}
+                                                : "Select a category"}
                                 </option>
                                 {categories.map((item) => (
                                     <option
@@ -531,6 +714,7 @@ function CreateProduct() {
                                     </option>
                                 ))}
                             </select>
+                            <FieldError>{validationErrors.category}</FieldError>
                             {categoryError && (
                                 <p role="alert" className="mt-1.5 text-xs text-red-300">
                                     {categoryError}
@@ -608,7 +792,7 @@ function CreateProduct() {
                     <SectionTitle
                         id="product-images-heading"
                         title="Images"
-                        description={`Add up to 5 product images. ${images.length} of 5 selected.`}
+                        description={`Add up to 5 product images. ${existingImages.length + images.length} of 5 selected.`}
                         action={
                             <label
                                 className={`${secondaryButtonClass} cursor-pointer focus-within:ring-2 focus-within:ring-primary`}
@@ -623,7 +807,7 @@ function CreateProduct() {
                                     accept="image/jpeg,image/png,image/webp"
                                     multiple
                                     onChange={addImages}
-                                    disabled={images.length >= 5}
+                                    disabled={existingImages.length + images.length >= 5}
                                     className="sr-only"
                                     aria-describedby="image-upload-help"
                                 />
@@ -638,8 +822,28 @@ function CreateProduct() {
                             {imageError}
                         </p>
                     )}
-                    {images.length ? (
+                    {existingImages.length + images.length ? (
                         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                            {existingImages.map((imageUrl, index) => (
+                                <li
+                                    key={imageUrl}
+                                    className="group relative aspect-square overflow-hidden rounded-xl border border-border bg-background"
+                                >
+                                    <img
+                                        src={getImageSource(imageUrl)}
+                                        alt={`Product image ${index + 1}`}
+                                        className="h-full w-full object-cover"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => removeExistingImage(imageUrl)}
+                                        aria-label={`Remove product image ${index + 1}`}
+                                        className="absolute right-2 top-2 inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-md transition-colors hover:bg-red-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                    >
+                                        <Trash2 aria-hidden="true" className="h-4 w-4" />
+                                    </button>
+                                </li>
+                            ))}
                             {images.map((image, index) => (
                                 <li
                                     key={image.preview}
@@ -1282,7 +1486,13 @@ function CreateProduct() {
                         ) : (
                             <Save aria-hidden="true" className="h-4 w-4" />
                         )}
-                        {isSaving ? "Creating product…" : "Create product"}
+                        {isSaving
+                            ? isEditing
+                                ? "Saving changes…"
+                                : "Creating product…"
+                            : isEditing
+                                ? "Save changes"
+                                : "Create product"}
                     </button>
                 </div>
             </form>
