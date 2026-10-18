@@ -6,7 +6,8 @@ import {
     getUserOrdersController,
     getOrderDetailsController,
     getAllOrdersByAdminController,
-    abortOrderOnDismiss
+  abortOrderOnDismiss,
+    updateOrderDeliveryDetails
 } from "../controllers/order.controller.js";
 
 const router = express.Router();
@@ -14,7 +15,8 @@ const router = express.Router();
 router.post("/", authenticateUser, createOrderController);
 router.get("/", authenticateUser, getUserOrdersController);
 router.get("/all", authenticateUser, authorizeAdmin, getAllOrdersByAdminController);
-router.patch("/:orderId/status", authenticateUser, authorizeAdmin, updateOrderStatusByAdminController);
+router.patch("/:orderId", authenticateUser, authorizeAdmin, updateOrderStatusByAdminController);
+router.patch("/delivery/:orderId", authenticateUser, authorizeAdmin, updateOrderDeliveryDetails);
 router.get("/:orderId", authenticateUser, getOrderDetailsController);
 router.post("/:orderId/dismiss",authenticateUser, abortOrderOnDismiss);
 export default router;

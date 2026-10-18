@@ -107,10 +107,11 @@ export const deleteProduct = async (req, res) => {
 export const updateProduct = async (req, res) => {
 
     const { productId } = req.params;
-    if (!req.body?.data) {
-        return res.status(400).json({ error: "invalid request body" });
+    if (!req.body) {
+
+        return res.status(400).json({ error: "invalid request body", body: req.body });
     }
-    const reqBody = req.body.data;
+    const reqBody = req.body;
 
     //validating the data
     const {

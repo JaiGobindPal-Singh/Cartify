@@ -255,6 +255,22 @@ export const abortOrderOnDismiss = async (orderId) => {
     return failOrderPayment(order, transaction);
 };
 
+//update delivery details of order like tracking id
+export const updateOrderDeliveryDetailsByAdmin = async (orderId, deliveryPartner, trackingId) => {
+  const order = await Order.findById(orderId);
+  //validating order
+  if (!order) throw new Error("Order not found");
+  if (order.status === "PAYMENT_PENDING" || order.status === "PAYMENT_FAILED") throw new Error("Cannot update delivery details for this order");
+
+  //update
+  order.deliveryDetails.deliveryPartner = deliveryPartner;
+  order.deliveryDetails.trackingId = trackingId;
+  await order.save();
+  return order;
+
+
+}
+
 
 // This function is called after the payment gateway redirects back.
 // It checks whether the payment was successful and updates the order status.
@@ -321,12 +337,53 @@ export const getUserOrders = async (userId, { pageNumber = 1, pageSize = 10 } = 
 
 export const getOrderDetails = async (orderId, userId, role) => {
     const filter = { _id: orderId };
-    if (userId && role.toUpperCase() !== "ADMIN") filter.user = userId;  //allow admin to access all orders
-    return Order.findOne(filter)
-        .populate("items.product", "name imageUrls")
-        .populate("deliveryDetails.deliveryType", "optionName")
-        .populate("transaction")
-        .lean();
+  if (userId && role.toUpperCase() !== "ADMIN") filter.user = userId;  //allow admin to access all orders
+  if (role === "ADMIN") {
+    //aggregation pipeline to only update if order is order_placed
+    const update = [
+      {
+        $set: {
+          // 1. Update status only if it is "ORDER_PLACED"
+          status: {
+            $cond: {
+              if: { $eq: ["$status", "ORDER_PLACED"] },
+              then: "PROCESSING",
+              else: "$status"
+            }
+          },
+          // 2. Push to statusHistory ONLY if the condition matches
+          statusHistory: {
+            $cond: {
+              if: { $eq: ["$status", "ORDER_PLACED"] },
+              then: {
+                $concatArrays: [
+                  { $ifNull: ["$statusHistory", []] }, // Handles null/undefined safely
+                  [
+                    {
+                      status: "PROCESSING",
+                      updatedAt: new Date()
+                    }
+                  ]
+                ]
+              },
+              else: { $ifNull: ["$statusHistory", []] } // Leaves history unchanged if not updated
+            }
+          }
+        }
+      }
+    ];
+    return Order.findOneAndUpdate(filter, update, { returnDocument: "after", updatePipeline: true }) //auto update order  if opened by admin
+      .populate("items.product", "name imageUrls")
+      .populate("deliveryDetails.deliveryType", "optionName")
+      .populate("transaction")
+      .populate("user", "name email uid -_id")
+      .lean();
+  }
+  return Order.findOne(filter) //just fetch order and return
+    .populate("items.product", "name imageUrls")
+    .populate("deliveryDetails.deliveryType", "optionName")
+    .populate("transaction")
+    .lean();
 };
 
 export const getAllOrdersByAdmin = async (status, { pageNumber = 1, pageSize = 10 } = {}) => {

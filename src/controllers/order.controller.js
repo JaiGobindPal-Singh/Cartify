@@ -6,7 +6,8 @@ import {
     getUserOrders,
     getOrderDetails,
     getAllOrdersByAdmin,
-    abortOrderOnDismiss as abortOrder
+    abortOrderOnDismiss as abortOrder,
+    updateOrderDeliveryDetailsByAdmin
 } from "../operations/order/order.operation.js";
 import { statusEnum } from "../constants/orderStatuses.js";
 
@@ -89,7 +90,7 @@ export const getOrderDetailsController = async (req, res) => {
 
 export const getAllOrdersByAdminController = async (req, res) => {
     try {
-        const status = req.query.status?.toUpperCase();
+      const status = req.query.status?.toUpperCase();
         if (status && !statusEnum.includes(status)) return res.status(400).json({ error: "Invalid order status" });
 
         const pageNumber = req.query.pn
@@ -120,4 +121,16 @@ export const abortOrderOnDismiss = async (req, res) => {
     } catch (error) {
         return handleError(error, res);
     }
+};
+
+export const updateOrderDeliveryDetails = async (req, res) => {
+  if (!req.body.deliveryPartner || !req.body.trackingId) {
+    return res.status(400).json({ error: "Delivery partner and tracking ID are required" });
+  }
+  try {
+    const order = await updateOrderDeliveryDetailsByAdmin(req.params.orderId, req.body.deliveryPartner, req.body.trackingId)
+    return res.status(200).json({success: true, order});
+  }catch(error){
+    return handleError(error, res);
+  }
 };

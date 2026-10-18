@@ -120,7 +120,7 @@ const deliveryDetailsSchema = new mongoose.Schema({
 }, { _id: false });
 
 
-// Schema for individual items records within the order 
+// Schema for individual items records within the order
 export const cartItemSchema = new mongoose.Schema({
     product: {
         type: mongoose.Schema.Types.ObjectId,
@@ -242,6 +242,8 @@ const orderSchema = new mongoose.Schema({
     timestamps: true
 });
 
+// Add this right below your schema definition, before mongoose.model('Order', orderSchema)
+orderSchema.index({ user: 1, createdAt: -1 });
 
 const Order = mongoose.model('Order', orderSchema);
 

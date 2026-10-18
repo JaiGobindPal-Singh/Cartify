@@ -3,6 +3,8 @@ import Sidebar from "./components/sidebar/Sidebar";
 import Header from "./components/header/Header";
 import LoginPage from "./pages/LoginPage";
 import Homepage from "./pages/Homepage";
+import Orders from "./pages/orders/Orders";
+import OrderDetails from "./pages/orders/OrderDetails";
 import { useEffect, useState } from "react";
 import { getUser } from "./services/user.service";
 import { Link } from "react-router-dom";
@@ -67,6 +69,9 @@ function App() {
         <Route path="/categories" element={<Categories/>}/>
         <Route path="/categories/create" element={<CreateCategory/>}/>
         <Route path="/categories/:id" element={<CategoryDetails/>}/>
+        
+        <Route path="/orders" element={<Orders />} />
+        <Route path="/orders/:id" element={<OrderDetails />} />
       </Route>
     </Routes>
   );
