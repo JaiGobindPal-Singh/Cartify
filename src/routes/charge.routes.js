@@ -4,13 +4,15 @@ import {
     updateChargeController,
     deleteChargeController,
     getAllChargesController,
-    getApplicableChargesController,
+  getApplicableChargesController,
+    getChargeController
 } from "../controllers/charge.controller.js";
 import { authenticateUser, authorizeAdmin } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
 router.get("/", authenticateUser, authorizeAdmin, getAllChargesController);
+router.get("/:chargeId", authenticateUser, authorizeAdmin, getChargeController);
 router.post("/applicable", getApplicableChargesController);
 router.post("/", authenticateUser, authorizeAdmin, addChargeController);
 router.put("/:chargeId", authenticateUser, authorizeAdmin, updateChargeController);

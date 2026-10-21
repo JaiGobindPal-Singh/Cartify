@@ -4,6 +4,7 @@ import {
     deleteCharge,
     getAllCharges,
     getApplicableCharges,
+    getCharge,
 } from "../operations/charge/charge.operation.js";
 import { validateMongoId, cleanMongoObject } from "../utils/mongo.utils.js";
 
@@ -76,6 +77,16 @@ export const deleteChargeController = async (req, res) => {
     }
 };
 
+export const getChargeController = async (req, res) => {
+  try {
+    const { chargeId } = req.params;
+    const charge = await getCharge(chargeId);
+    if (!charge) return res.status(404).json({ error: "Charge not found" });
+    return res.status(200).json({ success: true, charge });
+  } catch (error) {
+    return handleChargeError(error, res);
+  }
+};
 export const getAllChargesController = async (req, res) => {
     try {
         const filter = req.query.includeInactive === "true" ? {} : { isActive: true };

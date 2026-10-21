@@ -17,7 +17,7 @@ export const deleteCharge = async (chargeId) => {
 };
 
 export const getAllCharges = async (filter = {}) => {
-    return Charge.find(filter).sort({ chargeName: 1 }).lean();
+    return Charge.find(filter).select("chargeName isActive chargeType chargeAmount").lean();
 };
 
 const normalize = (value) => typeof value === "string" ? value.trim().toUpperCase() : value;
@@ -70,3 +70,8 @@ export const getApplicableCharges = async (order) => {
                 : charge.chargeAmount,
         }));
 };
+
+export const getCharge = async (chargeId) => {
+  return Charge.findById(chargeId).lean();
+
+}

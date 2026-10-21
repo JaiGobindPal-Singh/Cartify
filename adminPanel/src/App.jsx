@@ -14,6 +14,9 @@ import CreateProduct from "./pages/products/CreateProduct";
 import Categories from "./pages/categories/Categories";
 import CreateCategory from "./pages/categories/CreateCategory";
 import CategoryDetails from "./pages/categories/CategoryDetails";
+import Charges from "./pages/charges/Charges";
+import ChargeDetails from "./pages/charges/ChargeDetails";
+import CreateCharge from "./pages/charges/CreateCharge";
 const MainLayout = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
@@ -72,6 +75,9 @@ function App() {
         
         <Route path="/orders" element={<Orders />} />
         <Route path="/orders/:id" element={<OrderDetails />} />
+        <Route path="/charges" element={<Charges />} />
+        <Route path="/charges/create" element={<CreateCharge />} />
+        <Route path="/charges/:id" element={<ChargeDetails />} />
       </Route>
     </Routes>
   );

@@ -8,9 +8,8 @@ const links = [
     { label: 'Products', to: '/products', icon: '▦' },
     { label: 'Categories', to: '/categories/', icon: '◇' },
     { label: 'Orders', to: '/orders/', icon: '🛒' },
-    { label: 'Users', to: '/users/', icon: '👤' },
-    { label: 'Transactions', to: '/transactions/', icon: '💳' },
-    { label: 'Config', to: '/config/', icon: '⚙' },
+    { label: 'Charges', to: '/charges/', icon: '💰' },
+    
 ]
 
 
@@ -19,6 +18,10 @@ export function SidebarNavigation({ onNavigate }) {
 
     const handleLogout = async () => {
         try {
+            const confirmed = window.confirm("You are about to logout. Click OK to proceed.");
+            if (!confirmed) {
+                return;
+            }
             await logoutUser();
             navigate('/login');
             onNavigate?.();
@@ -29,6 +32,8 @@ export function SidebarNavigation({ onNavigate }) {
     };
 
     return (
+        <>
+        
         <nav aria-label="Main navigation" className="flex-1 space-y-1 px-3 py-6">
             <p className="mb-3 px-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 Workspace
@@ -51,15 +56,16 @@ export function SidebarNavigation({ onNavigate }) {
                     {label}
                 </NavLink>
             ))}
+        </nav>
             <button
                 type="button"
                 onClick={handleLogout}
-                className="mt-4 flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2"
+                className=" bg-accent flex mb-5 mx-2  items-center justify-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-bold  transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2 text-red-400"
             >
-                <span aria-hidden="true" className="w-5 text-center text-base">↪</span>
+                
                 Logout
             </button>
-        </nav>
+            </>
     );
 }
 

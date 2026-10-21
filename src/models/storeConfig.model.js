@@ -17,7 +17,7 @@ const storeConfigSchema = new mongoose.Schema({
             type: String,
             uppercase: true
         }],
-        default: ["USD"],
+        default: ["USD", "INR"],    //only inr and usd are supported for now
         required: true,
         trim: true,
     },
@@ -69,7 +69,7 @@ const storeConfigSchema = new mongoose.Schema({
                     type: String,
                     trim: true,
                 }],
-                default: [] // if empty, COD is allowed for all countries  
+                default: [] // if empty, COD is allowed for all countries
             }
         }
     }

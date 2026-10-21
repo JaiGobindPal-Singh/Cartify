@@ -15,7 +15,14 @@ import {
   updateOrderStatus,
 } from "../../services/order.service";
 import { generateNotification } from "../../utils/notification.utils";
-import { statusEnum } from "../../../../src/constants/orderStatuses.js";
+
+//status enum for order details page
+ const statusEnum = [
+    'HOLD',                     // order held by admin
+    'SHIPPED',                  // order out for delivery
+    'DELIVERED',
+    'CANCELLED',          
+]
 
 const inputClass =
   "mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-60";
