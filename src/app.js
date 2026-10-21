@@ -28,7 +28,7 @@ const frontendPath = path.join(__dirname,"..", "/front");
 const panelPath = path.join(__dirname,"..", "/panel");
 
 //serving frontend and admin panel
-app.use('/admin', express.static(panelPath));
+app.use('/panel', express.static(panelPath));
 app.use('/',  express.static(frontendPath));
 
 app.use(express.static(publicPath));
@@ -59,7 +59,7 @@ app.use("/api/v0/orders", orderRoutes);
 app.use("/api/v0/user", userRoutes);
 
 // Catch-all refresh handler for dashboard sub-routes (e.g., /dashboard/settings)
-    app.get('/admin*any', (req, res) => {
+    app.get('/panel*any', (req, res) => {
         res.sendFile(path.join(panelPath, 'index.html'));
     });
     app.get('/*any', (req, res) => {
