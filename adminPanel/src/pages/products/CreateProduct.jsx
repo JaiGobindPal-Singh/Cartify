@@ -774,7 +774,7 @@ function CreateProduct({ isEditing = false }) {
                         </div>
                         <div className="md:col-span-2">
                             <label htmlFor="product-description" className="block text-sm font-medium">
-                                Description
+                                Description*
                             </label>
                             <textarea
                                 id="product-description"
@@ -782,6 +782,7 @@ function CreateProduct({ isEditing = false }) {
                                 value={description}
                                 onChange={(event) => setDescription(event.target.value)}
                                 maxLength={5000}
+                                required={true}
                                 placeholder="Describe the product for your customers."
                             />
                         </div>
