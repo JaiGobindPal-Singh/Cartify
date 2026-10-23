@@ -2,7 +2,5 @@ node_modules/
 .vscode/
 .vscode-test/
 dist/
-#frontend and admin build
-front/
-panel/
 .env
+public/uploads/
