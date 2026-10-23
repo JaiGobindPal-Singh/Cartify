@@ -59,7 +59,7 @@ function ProductCard({ product, onDelete }) {
   const stock = Number(product.availableStock ?? 0);
   const imageUrl = getImageUrl(product.imageUrls?.[0]);
 
-  console.log(product.imageUrls, imageUrl);
+  console.log(product.imageUrls, product.imageUrls?.[0],  imageUrl);
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-border bg-card transition duration-200 hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-xl hover:shadow-black/15">
       <Link
