@@ -12,6 +12,28 @@ export const updateDeliveryOption = async (deliveryOptionId, updates) => {
     );
 };
 
+export const initializeDeliveryOption = async () => {
+    const filter = { optionName: 'Standard Shipping' };
+
+    const update = {
+        $setOnInsert: {
+            optionName: 'Standard Shipping',
+            description: '',
+            availableCountries: [],
+            exemptedCountries: [],
+            availablePostalCodes: [],
+            exemptedPostalCodes: [],
+            isActive: true
+        }
+    };
+    try{
+        //initialize a single deliveryOption by default to prevent failures
+        await DeliveryOption.updateOne(filter, update, { upsert: true });
+    }catch(e){
+        console.log("error occurred during delivery option initialization");
+        throw e;
+    }
+}
 export const deleteDeliveryOption = async (deliveryOptionId) => {
     return DeliveryOption.findByIdAndDelete(deliveryOptionId);
 };

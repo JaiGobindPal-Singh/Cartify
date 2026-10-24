@@ -19,6 +19,7 @@ import orderRoutes from "./routes/order.routes.js"
 import razorpayRoutes from "./modules/payments/razorpay/razorpay.routes.js"
 import paypalRoutes from "./modules/payments/paypal/paypal.routes.js"
 import userRoutes from "./routes/user.routes.js";
+import { initializeDeliveryOption } from './operations/deliveryOption/deliveryOption.operation.js';
 
 const app = express();
 const __dirname = import.meta.dirname;
@@ -71,6 +72,7 @@ export const startServer = async () => {
   console.log();
   await seedAdminUser();
   initializeStoreConfig();
+  initializeDeliveryOption();
 
   //global error handler
   app.use((err, req, res, next) => {
