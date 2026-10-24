@@ -9,7 +9,6 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
-import api from "../../configs/axios.config";
 import {
   deleteProduct,
   fetchLowStockProducts,
@@ -44,22 +43,13 @@ function formatPrices(pricing) {
     });
 }
 
-function getImageUrl(imageUrl) {
-  if (!imageUrl) return "";
-  try {
-    return new URL(imageUrl, api.defaults.baseURL).toString();
-  } catch {
-    return "";
-  }
-}
+
 
 function ProductCard({ product, onDelete }) {
   const isLowStock = Number(product.availableStock ?? 0) <= LOW_STOCK_THRESHOLD;
   const prices = formatPrices(product.pricing);
   const stock = Number(product.availableStock ?? 0);
-  const imageUrl = getImageUrl(product.imageUrls?.[0]);
-
-  console.log(product.imageUrls, product.imageUrls?.[0],  imageUrl);
+  const imageUrl = product.imageUrls?.[0];
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-border bg-card transition duration-200 hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-xl hover:shadow-black/15">
       <Link

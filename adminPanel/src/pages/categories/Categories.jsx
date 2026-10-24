@@ -1,5 +1,4 @@
 import { deleteCategory, fetchCategories } from "../../services/category.service";
-import api from "../../configs/axios.config";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
@@ -12,17 +11,10 @@ import {
 } from "lucide-react";
 import { generateNotification } from "../../utils/notification.utils";
 
-function getImageUrl(imageUrl) {
-    if (!imageUrl) return "";
-    try {
-        return new URL(imageUrl, api.defaults.baseURL).toString();
-    } catch {
-        return "";
-    }
-}
+
 
 function CategoryCard({ category, onDelete, isDeleting }) {
-    const imageUrl = getImageUrl(category.iconUrl);
+    const imageUrl = category.iconUrl;
 
     return (
         <div className="group relative">
