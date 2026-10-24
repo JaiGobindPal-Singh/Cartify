@@ -295,10 +295,12 @@ export const handlePaymentResult = async (payment) => {
 
     //updating inventory based on order status
     if (payment.status === "SUCCESS") {
-        await commitInventory(inventory);
+        await commitInventory(inventory);  //commit inventory
         order.status = "ORDER_PLACED";
+
+        await Cart.findOneAndUpdate({ user: order.user }, { $set: { items: [] } });  //refreshing cart on success 
     } else if (payment.status === "FAILED") {
-        await releaseInventory(inventory);
+        await releaseInventory(inventory);   //restock the reserved stock
         order.status = "PAYMENT_FAILED";
     } else {
         return order;
