@@ -8,12 +8,8 @@ const requiredEnv = [
     'ENCRYPTION_KEY',
     'ADMIN_PHONE',
     'ADMIN_PASSWORD',
-    // 'CLOUDINARY_API',
-    // 'CLOUDINARY_SECRET',
-    // 'CLOUDINARY_CLOUD_NAME',
-    // 'RAZORPAY_KEY_ID',
-    // 'RAZORPAY_KEY_SECRET',
-    // 'RAZORPAY_WEBHOOK_SECRET'
+    'EMAIL_HOST',
+    'EMAIL_PASS'
 ];
 
 for (const key of requiredEnv) {
@@ -33,6 +29,8 @@ export const env = {
     adminPassword: process.env.ADMIN_PASSWORD,
     adminName: process.env.ADMIN_NAME || 'Administrator',
     encryptionKey: process.env.ENCRYPTION_KEY,
+    emailHost: process.env.EMAIL_HOST,
+    emailPass: process.env.EMAIL_PASS
     // cloudinaryApi: process.env.CLOUDINARY_API,
     // cloudinarySecret: process.env.CLOUDINARY_SECRET,
     // cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME,

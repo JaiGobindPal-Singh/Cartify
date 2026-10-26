@@ -70,7 +70,18 @@ const userSchema = new mongoose.Schema(
         permissions: {
             type: [String],
             enum: PERMISSIONS,
-        }
+        },
+        otpDetails: {
+            code:{
+                type: String,
+                default: null
+            },
+            expiresAt:{
+                type: Date,
+                default: null
+            }
+        }, 
+        
     },
     {
         timestamps: true,

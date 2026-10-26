@@ -1,6 +1,7 @@
 import User from '../models/user.model.js'
 import { generateHash, verifyHash } from "../utils/bcrypt.utils.js";
 import { generateToken } from "../utils/jwt.utils.js";
+import crypto from "node:crypto"
 
 /**
  * validates the password based on the following criteria:
@@ -32,7 +33,7 @@ export const registerUser = async (req, res) => {
     }
 
     //fetching user from db to check if user exist
-    if(uid){
+    if (uid) {
         const user = await User.findOne({ uid }).lean();
         if (user) {
             return res.status(400).json({ error: 'User already exists with same uid' });
@@ -114,7 +115,7 @@ export const loginUser = async (req, res) => {
             name: user.name,
             uid: user.uid,
             role: user.role,
-            email:user.email,
+            email: user.email,
             streetAddress: user.address?.streetAddress,
             city: user.address?.city,
             state: user.address?.state,
@@ -143,8 +144,8 @@ export const logoutUser = async (req, res) => {
 export const autoLoginUser = async (req, res) => {
 
     const decoded = req.user;
-    if(!decoded){
-        return res.status(401).json({ error:"unauthorized"});
+    if (!decoded) {
+        return res.status(401).json({ error: "unauthorized" });
     }
 
     //fetch user from database using decoded token
@@ -160,7 +161,7 @@ export const autoLoginUser = async (req, res) => {
             name: user.name,
             role: user.role,
             uid: user.uid,
-            email:user.email,
+            email: user.email,
             streetAddress: user.address?.streetAddress,
             city: user.address?.city,
             state: user.address?.state,
@@ -171,42 +172,66 @@ export const autoLoginUser = async (req, res) => {
 
 }
 
+// send the otp on forgot
 export const forgotUser = async (req, res) => {
     try {
-        const { name, uid } = req.body;
-        const password = String(req.body.password);
-
-        if (!name || !uid || !password) {
-            return res.status(400).json({ error: 'Name, uid and password are required' });
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                error: "user not found"
+            });
         }
 
-        if (password.trim().length < 8) {
-            return res.status(400).json({ error: "short password" })
-        }
+        //generate otp
+        const otpCode = crypto.randomInt(100000, 1000000).toString();
 
-        //user validation if it even exists
-        const user = await User.findOne({ uid }).lean();
-        if (!user) {
-            return res.status(400).json({ message: "Invalid uid or user name" });
-        }
-
-        //updating db if name and uid number matches
-        if (String(name || "").toLowerCase().trim() === String(user?.name).toLowerCase().trim()) {
-            const hashedPassword = await generateHash(password);
-            const r = await User.updateOne(
-                { uid: uid },
-                { $set: { password: hashedPassword } }
-            );
-            if (!r || !r.matchedCount) {
-                return res.status(400).json({ message: "Invalid uid or user name" });
-                console.log(r);
+        //updating db if email matches and storing otp in db with 10min expiry
+        const result = await User.updateOne(
+            { email: email },
+            {
+                $set: {
+                    'otpDetails.code': otpCode.trim(), 'otpDetails.expiresAt': new Date(Date.now() + 10 * 60 * 1000)
+                }
             }
-            return res.status(200).json({ message: "successfully forget" });
+        )
+        if(!result.matchedCount){
+            return res.status(200).json({success: false, error: "user not found"});
         }
-        return res.status(400).json({ message: "Invalid uid or user name" });
+        return res.status(200).json({success: true, message: "otp sent"});
+
     } catch (e) {
         console.log(e);
         return res.status(500).json({ error: "internal server error" });
+    }
+}
+
+//verify the otp and reset user password
+export const resetPassword = async(req, res) =>{
+    try {
+        const {email, otp, password} = req.body;
+        if(!email || !otp || !password || !validatePassword(password)){
+            return res.status(400).json({error: "invalid credentials"});
+        }
+
+        const user = await User.findOne({email, 'otpDetails.code': String(otp).trim()});
+        if (!user || !user.otpDetails?.expiresAt || user.otpDetails.expiresAt.getTime() <= Date.now()) {
+            return res.status(400).json({error: "invalid or expired otp"});
+        }
+
+        const hashedPassword = await generateHash(String(password));
+        await User.updateOne(
+            {_id: user._id},
+            {
+                $set: {password: hashedPassword},
+                $unset: {otpDetails: ""}
+            }
+        );
+
+        return res.status(200).json({success: true, message: "password reset successfully"});
+    } catch (e) {
+        console.log(e);
+        return res.status(500).json({error: "internal server error"});
     }
 }
 
