@@ -2,6 +2,7 @@ import User from '../models/user.model.js'
 import { generateHash, verifyHash } from "../utils/bcrypt.utils.js";
 import { generateToken } from "../utils/jwt.utils.js";
 import crypto from "node:crypto"
+import { sendMail } from '../utils/mailer.utils.js';
 
 /**
  * validates the password based on the following criteria:
@@ -195,10 +196,66 @@ export const forgotUser = async (req, res) => {
                 }
             }
         )
-        if(!result.matchedCount){
-            return res.status(200).json({success: false, error: "user not found"});
+        if (!result.matchedCount) {
+            return res.status(200).json({ success: false, error: "user not found" });
         }
-        return res.status(200).json({success: true, message: "otp sent"});
+
+        //mail ui to send
+        const mailHtml = `
+        <div style="font-family: 'Times New Roman', Times, serif; background-color: #FCF9F3; max-width: 600px; margin: 0 auto; padding: 40px 20px; text-align: center; border: 1px solid #EAE2D5;">
+      
+      <!-- Top Accent Bar -->
+      <div style="font-family: Arial, sans-serif; font-size: 10px; letter-spacing: 2px; color: #9E7E44; text-transform: uppercase; margin-bottom: 30px;">
+        Heritage in Every Weave • Distinction in Every Detail
+      </div>
+
+      <!-- Website Styled Header / Logo -->
+      <h1 style="font-size: 28px; font-weight: 400; letter-spacing: 4px; color: #222222; margin: 0 0 5px 0; text-transform: uppercase;">
+        G R D
+      </h1>
+      <p style="font-size: 11px; letter-spacing: 5px; color: #666666; margin: 0 0 40px 0; text-transform: uppercase;">
+        Amritsar
+      </p>
+
+      <hr style="border: 0; border-top: 1px solid #EAE2D5; margin-bottom: 40px;" />
+
+      <!-- Main Body Content -->
+      <h2 style="font-size: 22px; font-weight: 400; letter-spacing: 1px; color: #222222; margin-bottom: 20px;">
+        Password Reset Request
+      </h2>
+      
+      <p style="font-family: Arial, sans-serif; color: #555555; font-size: 14px; line-height: 1.6; max-width: 480px; margin: 0 auto 30px auto;">
+        We received a request to reset the password for your account. Please use the verification security code below to proceed with your reset.
+      </p>
+
+      <!-- Premium Styled OTP Box -->
+      <div style="background-color: #FFFFFF; border: 1px solid #EAE2D5; display: inline-block; padding: 15px 40px; border-radius: 2px; margin-bottom: 30px; box-shadow: 0px 2px 4px rgba(0,0,0,0.02);">
+        <span style="font-family: Arial, sans-serif; font-size: 34px; font-weight: bold; letter-spacing: 6px; color: #222222;">${otpCode}</span>
+      </div>
+
+      <!-- Expiration Note -->
+      <p style="font-family: Arial, sans-serif; color: #888888; font-size: 13px; margin-bottom: 40px;">
+        This temporary security code is valid for <strong>10 minutes</strong>.
+      </p>
+
+      <hr style="border: 0; border-top: 1px solid #EAE2D5; margin-bottom: 30px;" />
+
+      <!-- Footer Policy / Assistance Links -->
+      <p style="font-family: Arial, sans-serif; color: #999999; font-size: 11px; line-height: 1.5; max-width: 450px; margin: 0 auto;">
+        If you did not make this request, your account credentials are secure and you can safely ignore this automated message.
+      </p>
+      
+    </div>
+    `
+
+        //send the otp via mail
+        sendMail(email,
+            "Reset Your Password - GRD Amritsar",
+            `Your One-Time Password (OTP) to reset your password at GRD Amritsar is: ${otpCode}. This code is valid for 10 minutes. If you did not request this, please ignore this email.`,
+            mailHtml
+
+        )
+        return res.status(200).json({ success: true, message: "otp sent" });
 
     } catch (e) {
         console.log(e);
@@ -207,31 +264,31 @@ export const forgotUser = async (req, res) => {
 }
 
 //verify the otp and reset user password
-export const resetPassword = async(req, res) =>{
+export const resetPassword = async (req, res) => {
     try {
-        const {email, otp, password} = req.body;
-        if(!email || !otp || !password || !validatePassword(password)){
-            return res.status(400).json({error: "invalid credentials"});
+        const { email, otp, password } = req.body;
+        if (!email || !otp || !password || !validatePassword(password)) {
+            return res.status(400).json({ error: "invalid credentials" });
         }
 
-        const user = await User.findOne({email, 'otpDetails.code': String(otp).trim()});
+        const user = await User.findOne({ email, 'otpDetails.code': String(otp).trim() });
         if (!user || !user.otpDetails?.expiresAt || user.otpDetails.expiresAt.getTime() <= Date.now()) {
-            return res.status(400).json({error: "invalid or expired otp"});
+            return res.status(400).json({ error: "invalid or expired otp" });
         }
 
         const hashedPassword = await generateHash(String(password));
         await User.updateOne(
-            {_id: user._id},
+            { _id: user._id },
             {
-                $set: {password: hashedPassword},
-                $unset: {otpDetails: ""}
+                $set: { password: hashedPassword },
+                $unset: { otpDetails: "" }
             }
         );
 
-        return res.status(200).json({success: true, message: "password reset successfully"});
+        return res.status(200).json({ success: true, message: "password reset successfully" });
     } catch (e) {
         console.log(e);
-        return res.status(500).json({error: "internal server error"});
+        return res.status(500).json({ error: "internal server error" });
     }
 }
 
