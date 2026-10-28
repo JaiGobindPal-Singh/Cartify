@@ -136,7 +136,7 @@ function CategoryDetails() {
     );
   }
 
-  const iconUrl = getImageUrl(category.iconUrl);
+  const iconUrl = category.iconUrl;
 
   return (
     <main className="mx-auto w-full max-w-375 px-4 py-6 text-foreground sm:px-6 lg:px-8 lg:py-8">
